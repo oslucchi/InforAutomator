@@ -33,12 +33,14 @@ public class FormFiller {
 		this.orderRef = orderRef;
 	}
 
-	public int enterData()
+	public String enterData()
 	{
 		Screen s = new Screen(0);
 		Match m = null;
 		Region r = null;
+		String DTVName = null;
 		ImagePath.add(System.getProperty("user.dir"));
+		
 		try{
 			if ((m = s.exists("img/InforLogo.png")) == null)
 			{
@@ -78,7 +80,7 @@ public class FormFiller {
 			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");
 			System.out.println(m.getX() + " " + m.getY());
 			r = new Region(m.getX(), m.getY() + 18, 100, 300);
-			r.highlight(1);
+//			r.highlight(1);
 			matchList = r.collectLines();
 			for(Picking item : pickList)
 			{
@@ -86,7 +88,7 @@ public class FormFiller {
 				if ((m = getPosition(matchList, item.getArticle())) != null)
 				{
 					System.out.println("At " + m.getX() + ", " + m.getY() + " - len " + m.getW() + " width " + m.getH());
-					r = new Region(m.getX() + 115, m.getY() + 2, 20, 15);
+					r = new Region(m.getX() + 115, m.getY(), 20, 18);
 					r.click();
 					r.type("1" + Key.ENTER);
 				}
@@ -97,7 +99,7 @@ public class FormFiller {
 			Thread.sleep(500);
 			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
 			Region art = new Region(m.getX() + 110, m.getY() + 18, 110, 2500);
-			r.highlight(1);
+//			r.highlight(1);
 			System.out.println("\n\n********     *****************");
 			matchList = art.collectLines();
 			for(Match item: matchList)
@@ -111,7 +113,15 @@ public class FormFiller {
 				if ((m = getPosition(matchList, item.getArticle())) != null)
 				{
 					System.out.println("At " + m.getX() + ", " + m.getY() + " - len " + m.getW() + " width " + m.getH());
-					r = new Region(m.getX()+260, m.getY(), 80, 18);
+					
+					r = new Region(m.getX()+110, m.getY(), 80, 18);
+					String wh = r.textLines().get(0);
+					if ((wh.compareTo("NLIT05") != 0) && (wh.compareTo("NLITOS") != 0))
+					{
+						r.click();
+						r.type("NLIT05");
+					}
+					r = new Region(r.getX()+150, r.getY(), 80, 18);
 					r.click();
 					r.type(item.getX() + Key.ENTER);
 					r = new Region(r.getX() + 100, r.getY(), 50, 18);
@@ -122,16 +132,23 @@ public class FormFiller {
 					r.type(item.getZ());
 				}
 			}
+			s.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
+			Thread.sleep(1000);
+			
 			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
 			r = new Region(m.getX() + 250, m.getY(), 200, 18);
-			String DTVName = r.textLines().get(0);
+			DTVName = r.textLines().get(0);
 			DTVName = DTVName.substring(DTVName.indexOf("DTV") + 8);
 			System.out.println("DTVName " + DTVName);
+			Thread.sleep(500);
+			s.click("img/Inventory_GoodsIssue_CloseOption.png");
+			Thread.sleep(200);
+			s.click("img/MainMenu_Save.png");
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
 		
-		return 0;
+		return DTVName;
 	}
 }

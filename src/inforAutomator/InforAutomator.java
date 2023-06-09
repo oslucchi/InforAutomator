@@ -43,7 +43,7 @@ public class InforAutomator {
                 InputStream inputStream = clientSocket.getInputStream();
                 OutputStream outputStream = clientSocket.getOutputStream();
 
-                for(int i = 0; i < 3; i++)
+                for(int i = 0; i < 2; i++)
                 {
 	                // Read the packet length (4 bytes)
 	                byte[] lengthBytes = new byte[4];
@@ -82,15 +82,14 @@ public class InforAutomator {
     			
                 // Invoke the doSomething function and get the return value
                 FormFiller ff = new FormFiller(pickList, orderRef);
-                int returnCode = ff.enterData();
+                String DTVName = ff.enterData();
 
                 // Convert the return code to bytes
-                byte[] returnCodeBytes = intToByteArray(returnCode);
+                byte[] returnCodeBytes = intToByteArray(DTVName.length());
 
                 // Send the return code back to the client
-                outputStream.write(4);
                 outputStream.write(returnCodeBytes);
-
+                outputStream.write(DTVName.getBytes());
                 clientSocket.close();
                 System.out.println("Connection closed.");
             }

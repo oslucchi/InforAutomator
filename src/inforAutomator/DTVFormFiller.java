@@ -9,7 +9,7 @@ import org.sikuli.script.Match;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
-public class FormFiller {	
+public class DTVFormFiller {	
 
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
@@ -27,7 +27,7 @@ public class FormFiller {
 		return null;
 	}
 
-	public FormFiller(ArrayList<Picking> pickList, String orderRef)
+	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef)
 	{
 		this.pickList = pickList;
 		this.orderRef = orderRef;

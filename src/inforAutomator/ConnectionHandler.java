@@ -6,6 +6,10 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import javax.json.JsonObject;
+
+import org.sikuli.script.ImagePath;
+
 public class ConnectionHandler extends Thread 
 {
     private final Socket clientSocket;
@@ -93,7 +97,8 @@ public class ConnectionHandler extends Thread
         stockMoveJSON = new String(messageBytes);
        
         System.out.println("Received message: " + stockMoveJSON);
-        StockMove sm = (StockMove) JavaJSONMapper.JSONToJava(JavaJSONMapper.StringToJSON(stockMoveJSON), StockMove.class);
+//        StockMove sm = (StockMove) JavaJSONMapper.JSONToJava(JavaJSONMapper.StringToJSON(stockMoveJSON), StockMove.class);
+		JsonObject sm = JavaJSONMapper.StringToJSON(stockMoveJSON);
 	
 		// Invoke the doSomething function and get the return value
 	    MoveStockFormFiller ff = new MoveStockFormFiller(sm);
@@ -112,6 +117,8 @@ public class ConnectionHandler extends Thread
 	@Override
     public void run() {
         try {
+        	System.out.println("user dir '" + System.getProperty("user.dir")+ "'");
+        	ImagePath.add(System.getProperty("user.dir"));
             inputStream = clientSocket.getInputStream();
             outputStream = clientSocket.getOutputStream();
 

@@ -152,6 +152,7 @@ public class DTVFormFiller {
 		}
 		catch(Exception e){
 			e.printStackTrace();
+			return "KO";
 		}
 		
 		return DTVName;

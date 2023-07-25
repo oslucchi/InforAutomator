@@ -66,14 +66,15 @@ public class MoveStockFormFiller {
 			String locationTo[] = sm.getString("locationTo").split("-");
 			for(int i = 0; i < 4; i++)
 			{
-				r = new Region(rFrom,120 + i * 22, 190, 20);
+				r = new Region(rFrom,120 + i * 23, 190, 20);
+				r.highlight(1);
 				r.click();
 				r.type(locationFrom[i]);
-				r = new Region(rTo,120 + i * 22, 190, 20);
+				r = new Region(rTo,120 + i * 23, 190, 20);
+				r.highlight(1);
 				r.click();
 				r.type(locationFrom[i]);
 			}
-			r.highlight(2);
 			
 			s.click("img/Inventory_Information_InventoryInformation_Load.png");
 			r = new Region(277, 291, 127, 16);
@@ -90,13 +91,19 @@ public class MoveStockFormFiller {
 
 			List<Match> matchList = r.collectLines();
 			System.out.println("using collectLines...");
+			for(String item : rText)
+			{
+				System.out.println(item);
+			}
+
 			double quantity = 0;
 			double requiredQuantity = (double) sm.getInt("quantity");
-			r = new Region(248, 331, 28, 180);
+			r = new Region(235, 320, 40, 200);
+			r.highlight(1);
 			int rowCount = 3;
 			for(Match item : matchList)
 			{
-				System.out.println(item.getText());
+				System.out.println("Line " + rowCount + " quantity " + item.getText());
 				quantity += Double.parseDouble(item.getText().replaceAll(",",  "."));
 				if (rowCount == 3)
 				{
@@ -171,6 +178,7 @@ public class MoveStockFormFiller {
 		}
 		catch(Exception e){
 			e.printStackTrace();
+			return "KO";
 		}
 		
 		return "OK";

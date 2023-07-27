@@ -6,6 +6,7 @@ import java.util.List;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Key;
 import org.sikuli.script.Match;
+import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
@@ -37,7 +38,7 @@ public class DTVFormFiller {
 	{
 		Screen s = new Screen(0);
 		Match m = null;
-		Region r = null;
+		Region r = null, menu = new Region(1, 14, 339, 28);
 		String DTVName = null;
 		ImagePath.add(System.getProperty("user.dir"));
 		
@@ -68,13 +69,21 @@ public class DTVFormFiller {
 			r.click("img/ComboArrowDown.png");
 			Thread.sleep(500);
 			r = new Region(520, 200, 600, 400);
+			OCR textReader = new OCR();
 			@SuppressWarnings("deprecation")
 			List<Match> matchList = r.collectLines();
 			for(Match item : matchList)
 			{
 				System.out.println(item.getText());
+				List<Match> wordsInText = OCR.readWords(item);
+				for (Match word : wordsInText)
+				{
+					System.out.println("Scanned '" + word.getText() + "'" );
+				}
 			}
-			m = getPosition(matchList, orderRef);
+			System.out.println("Searching for order ref '" + 
+								orderRef.substring(orderRef.length() - 5, orderRef.length()) + "'");
+			m = getPosition(matchList, orderRef.substring(orderRef.length() - 5, orderRef.length()));
 			m.click();
 			s.click("img/Inventory_GoodsIssue_LoadButton.png");
 			s.wait("img/Inventory_GoodsIssue_SalesIssue_InputFormReady.png",10000);
@@ -98,10 +107,13 @@ public class DTVFormFiller {
 
 
 			s.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
-			s.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
-			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");
-			Region art = new Region(m.getX(), m.getY() + 18, 110, 2500);
+			r = new Region(500,350,250,100);
+			r.highlight(1);
+			r.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
+//			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");
+//			Region art = new Region(m.getX(), m.getY() + 18, 110, 2500);
 //			r.highlight(1);
+			Region art = new Region(395, 428, 110, 2500);
 			System.out.println("\n\n********     *****************");
 			matchList = art.collectLines();
 			for(Match item: matchList)
@@ -139,14 +151,22 @@ public class DTVFormFiller {
 				}
 			}
 			s.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
-			Thread.sleep(500);
+			
 			
 			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
 			r = new Region(m.getX() + 250, m.getY(), 200, 18);
 			DTVName = r.textLines().get(0);
-			DTVName = DTVName.substring(DTVName.indexOf("DTV") + 8);
+			DTVName = DTVName.substring(DTVName.indexOf("DTV") + 7);
 			System.out.println("DTVName " + DTVName);
-			s.click("img/Inventory_GoodsIssue_CloseOption.png");
+			
+			r = new Region(122, 21, 151, 115);
+			menu.click("img/Menu_Functions.png");
+			r.click("img/Functions_Post.png");
+			r.wait(15.0);
+			r = new Region(1850,0,70,27);
+			r.click("img/X_CloseForm.png");
+			r = new Region(0, 0, 220, 1030);
+			s.click("img/Inventory_GoodsIssueButton.png");
 //			Thread.sleep(200);
 //			s.click("img/MainMenu_Save.png");
 		}

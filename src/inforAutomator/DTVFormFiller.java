@@ -40,7 +40,8 @@ public class DTVFormFiller {
 		Match m = null;
 		Region r = null, menu = new Region(1, 14, 339, 28);
 		String DTVName = null;
-		ImagePath.add(System.getProperty("user.dir"));
+		String imgPath = System.getProperty("user.dir");
+		ImagePath.add(imgPath);
 		
 		try{
 			if ((m = s.exists("img/InforLogo.png")) == null)
@@ -64,22 +65,31 @@ public class DTVFormFiller {
 			s.click("img/Inventory_GoodsIssue_SalesIssue_PickListCheck.png");
 			m = s.find("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
 			r = new Region(520,164,265,26);
-//			r.highlight(1);
+			r.highlight(2);
 			System.out.println("Found order no combobox");
 			r.click("img/ComboArrowDown.png");
 			Thread.sleep(500);
 			r = new Region(520, 200, 600, 400);
-			OCR textReader = new OCR();
-			@SuppressWarnings("deprecation")
-			List<Match> matchList = r.collectLines();
+			r.highlight(2);
+			
+			List<Match> matchList = r.findLines();
+			Match itemFound = null;
 			for(Match item : matchList)
 			{
 				System.out.println(item.getText());
 				List<Match> wordsInText = OCR.readWords(item);
 				for (Match word : wordsInText)
 				{
-					System.out.println("Scanned '" + word.getText() + "'" );
+					if (orderRef.compareTo(word.getText()) == 0)
+					{
+						itemFound = item;
+						break;
+					}
 				}
+			}
+			if (itemFound == null)
+			{
+				throw new Exception ("Order ref not found");
 			}
 			System.out.println("Searching for order ref '" + 
 								orderRef.substring(orderRef.length() - 5, orderRef.length()) + "'");
@@ -92,7 +102,7 @@ public class DTVFormFiller {
 			System.out.println(m.getX() + " " + m.getY());
 			r = new Region(m.getX(), m.getY() + 18, 100, 300);
 //			r.highlight(1);
-			matchList = r.collectLines();
+			matchList = r.findLines();
 			for(Picking item : pickList)
 			{
 				System.out.println("Searching for " + item.getArticle() + " in region");
@@ -115,7 +125,7 @@ public class DTVFormFiller {
 //			r.highlight(1);
 			Region art = new Region(395, 428, 110, 2500);
 			System.out.println("\n\n********     *****************");
-			matchList = art.collectLines();
+			matchList = art.findLines();
 			for(Match item: matchList)
 			{
 				System.out.println(item.getText() + " at " + item.getX() + ", " + item.getY() + " - len " + item.getW() + " width " + item.getH());

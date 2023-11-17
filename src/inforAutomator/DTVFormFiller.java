@@ -1,6 +1,7 @@
 package inforAutomator;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import org.sikuli.script.ImagePath;
@@ -11,180 +12,348 @@ import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 public class DTVFormFiller {	
-
+	final int FORM_HEADER_OFFSET_X = 220;
+	final int FORM_HEADER_OFFSET_Y = 0;
+	final int TOOLBAR_OFFSET_X = 0;
+	final int TOOLBAR_OFFSET_Y = 980;
+	final int APPBODY_OFFSET_X = 220;
+	final int APPBODY_OFFSET_Y = 220;
+	final int HIGHLIGHT_DURATION = 1;
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
-
-	private Match getPosition(List<Match> matchList, String article)
-	{
-		for(Match item: matchList)
-		{
-			if (item.getText().contains(article))
-			{
-				System.out.println(item.getText() + "found");
-				return item;
-			}
-		}
-		return null;
-	}
-
-	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef)
+	boolean highlight = false;
+	Screen s = new Screen(1);
+	Match mItem = null;
+	Region menu, formHeader, appBody, rItem, toolBar, r;
+	String DTVName = null;
+	OCR.Options textOpt;
+	List<Match> resources;
+	
+	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef, boolean highlight)
 	{
 		this.pickList = pickList;
 		this.orderRef = orderRef;
+		this.highlight = highlight;
+		menu = new Region(0, 0, 240, 1080);
+		highlightSelection(menu, HIGHLIGHT_DURATION);
+		toolBar = new Region(TOOLBAR_OFFSET_X, TOOLBAR_OFFSET_Y, 
+							 1920 - TOOLBAR_OFFSET_X, 1080 - TOOLBAR_OFFSET_Y);
+		highlightSelection(toolBar, HIGHLIGHT_DURATION);
+		formHeader = new Region(FORM_HEADER_OFFSET_X, FORM_HEADER_OFFSET_Y, 
+								1920 - FORM_HEADER_OFFSET_X, 250);
+		highlightSelection(formHeader, HIGHLIGHT_DURATION);
+		appBody = new Region(APPBODY_OFFSET_X, APPBODY_OFFSET_Y, 
+							 1920 - APPBODY_OFFSET_X, 1080 - APPBODY_OFFSET_Y);
+		highlightSelection(appBody, HIGHLIGHT_DURATION);
+		textOpt = OCR.globalOptions().fontSize(12);
 	}
 
-	public String enterData()
+	private void pauseExecution(long mills)
 	{
-		Screen s = new Screen(0);
-		Match m = null;
-		Region r = null, menu = new Region(1, 14, 339, 28);
-		String DTVName = null;
-		String imgPath = System.getProperty("user.dir");
-		ImagePath.add(imgPath);
-		
-		try{
-			if ((m = s.exists("img/InforLogo.png")) == null)
-			{
-				if ((m = s.exists("img/InforIcon.png")) == null)
-				{
-					System.out.println("Infor non è in esecuzione");
-					System.exit(-1);
-				}
-				m.click();
-			}
-			s.wait("img/InforLogo.png");
-			if ((m = s.exists("img/InventoryMenuOpened.png")) == null)
-			{
-				s.click("img/InventoryButton.png");
-			}
-			s.wait("img/InventoryMenuOpened.png");
-			s.click("img/Inventory_GoodsIssueButton.png");
-			s.click("img/Inventory_GoodsIssue_SalesIssue.png");
-			s.wait("img/Inventory_GoodsIssue_SalesIssue_Form.png");
-			s.click("img/Inventory_GoodsIssue_SalesIssue_PickListCheck.png");
-			m = s.find("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
-			r = new Region(520,164,265,26);
-			r.highlight(2);
-			System.out.println("Found order no combobox");
-			r.click("img/ComboArrowDown.png");
-			Thread.sleep(500);
-			r = new Region(520, 200, 600, 400);
-			r.highlight(2);
+		try {
+			Thread.sleep(mills);
+		}
+		catch(Exception e)
+		{
 			
-			List<Match> matchList = r.findLines();
-			Match itemFound = null;
-			for(Match item : matchList)
+		}
+	}
+
+	public void highlightSelection(Object sikuliObj, int duration)
+	{
+		if (highlight)
+		{
+			String className = sikuliObj.getClass().getName();
+			className = className.substring(className.lastIndexOf('.') + 1);
+			switch(className)
 			{
-				System.out.println(item.getText());
-				List<Match> wordsInText = OCR.readWords(item);
-				for (Match word : wordsInText)
+			case "Region":
+				((Region) sikuliObj).highlight(duration);
+				break;
+			case "Match":
+				((Match) sikuliObj).highlight(duration);
+				break;
+			}
+		}
+	}
+	
+	private String[] readMenuEntries()
+	{
+		List<Match> menuItems = OCR.readLines(menu, textOpt);
+		String[] menuEntries = new String[menuItems.size()];
+		int i = 0;
+		for(Match m : menuItems)
+		{
+			menuEntries[i++] = m.getText();				
+		}
+		
+		return menuEntries;
+	}
+	
+	
+	public void getSalesIssueFeatureOn()
+	{
+		try{
+			if (!shownAsMenuEntries("Goods issue"))
+			{
+				menu.click("img/InventoryButton.png");
+				menu.wait("img/InventoryMenuOpened.png");
+			}
+			if (!shownAsMenuEntries("Sales issue"))
+			{
+				menu.click("img/Inventory_GoodsIssueButton.png");
+			}
+			menu.click("img/Inventory_GoodsIssue_SalesIssue.png");
+		}
+		catch(Exception e)
+		{
+			
+		}
+	}
+	
+	public void getSalesIssueData()
+	{
+		try{
+			formHeader.wait("img/Inventory_GoodsIssue_SalesIssue_Form.png");
+			formHeader.click("img/Inventory_GoodsIssue_SalesIssue_PickListCheck.png");
+			mItem = formHeader.find("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
+			rItem = new Region(FORM_HEADER_OFFSET_X + mItem.x + 50, FORM_HEADER_OFFSET_Y + mItem.y, mItem.w - 50, 400);
+			
+			rItem.click("img/ComboArrowDown.png");
+			pauseExecution(500);
+			
+			List<Match> ordersPicked = OCR.readLines(rItem, textOpt);
+			
+			Match entry = null;
+			for(int i = 0; i < ordersPicked.size(); i++)
+			{
+				System.out.println(ordersPicked.get(i).getText());
+				if (ordersPicked.get(i).getText().contains(orderRef.substring(2)))
 				{
-					if (orderRef.compareTo(word.getText()) == 0)
+					entry = ordersPicked.get(i);
+					break;
+				}
+			}
+			if (entry == null)
+			{
+				System.out.println("Ordine non trovato");
+				System.exit(-1);
+			}
+			
+			rItem = new Region(rItem.x + entry.x, rItem.y + entry.y, entry.w, entry.h);
+			rItem.click();
+			
+			formHeader.click("img/Inventory_GoodsIssue_LoadButton.png");
+		}
+		catch(Exception e)
+		{
+			
+		}
+	}
+	
+	public void enterSalesIssueInventory(Region resourcesRegion)
+	{
+		try{
+			resources = OCR.readLines(resourcesRegion, textOpt);
+			for(Picking item : pickList)
+			{
+				for(Match match : resources)
+				{
+					System.out.println("Comparing '" + match.getText() + "' to '"  + item.getArticle() + "'");
+					if (match.getText().compareTo(item.getArticle()) == 0)
 					{
-						itemFound = item;
+						System.out.println(" found '" + match.getText() + "' At " + 
+										   match.getX() + ", " + match.getY() + 
+										   " - len " + match.getW() + " width " + match.getH());
+						rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 20, 18);
+						rItem.click();
+						rItem.type("1" + Key.ENTER);
+						break;
+					}
+				}
+
+			}
+		}
+		catch(Exception e)
+		{
+			
+		}
+	}
+
+	public void enterSalesIssueCoordinates(Region resourcesRegion)
+	{
+		try{
+			
+			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
+			mItem.click();
+			
+			rItem = new Region(APPBODY_OFFSET_X, mItem.y - 20, 1920 - APPBODY_OFFSET_X, 60);
+			rItem.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
+			System.out.println("\n\n********     *****************");
+			
+			pauseExecution(500);
+			for(Picking item : pickList)
+			{
+				for(Match match : resources)
+				{
+					System.out.println("Comparing '" + match.getText() + "' to '"  + item.getArticle() + "'");
+					if (match.getText().compareTo(item.getArticle()) == 0)
+					{						
+						System.out.println(" found '" + match.getText() + "' At " + 
+								   match.getX() + ", " + match.getY() + 
+								   " - len " + match.getW() + " width " + match.getH());
+						rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 150, 18);
+						String wh = OCR.readWord(rItem);
+						if (wh.compareTo("NLIT05") != 0)
+						{
+							rItem.click();
+							rItem.type("NLIT05");
+						}
+						
+						rItem = new Region(rItem.getX()+150, rItem.getY(), 100, 18);
+						rItem.click();
+						rItem.type(item.getX() + Key.ENTER);
+						
+						rItem = new Region(rItem.getX()+100, rItem.getY(), 70, 18);
+						rItem.click();
+						rItem.type(item.getY() + Key.ENTER);
+	
+						rItem = new Region(rItem.getX()+70, rItem.getY(), 45, 18);
+						rItem.click();
+						rItem.type(item.getZ() + Key.ENTER);
 						break;
 					}
 				}
 			}
-			if (itemFound == null)
-			{
-				throw new Exception ("Order ref not found");
-			}
-			System.out.println("Searching for order ref '" + 
-								orderRef.substring(orderRef.length() - 5, orderRef.length()) + "'");
-			m = getPosition(matchList, orderRef.substring(orderRef.length() - 5, orderRef.length()));
-			m.click();
-			s.click("img/Inventory_GoodsIssue_LoadButton.png");
-			s.wait("img/Inventory_GoodsIssue_SalesIssue_InputFormReady.png",10000);
 
-			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");
-			System.out.println(m.getX() + " " + m.getY());
-			r = new Region(m.getX(), m.getY() + 18, 100, 300);
-//			r.highlight(1);
-			matchList = r.findLines();
-			for(Picking item : pickList)
-			{
-				System.out.println("Searching for " + item.getArticle() + " in region");
-				if ((m = getPosition(matchList, item.getArticle())) != null)
-				{
-					System.out.println("At " + m.getX() + ", " + m.getY() + " - len " + m.getW() + " width " + m.getH());
-					r = new Region(m.getX() + 115, m.getY(), 20, 18);
-					r.click();
-					r.type("1" + Key.ENTER);
-				}
-			}
-
-
-			s.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
-			r = new Region(500,350,250,100);
-			r.highlight(1);
-			r.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
-//			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");
-//			Region art = new Region(m.getX(), m.getY() + 18, 110, 2500);
-//			r.highlight(1);
-			Region art = new Region(395, 428, 110, 2500);
-			System.out.println("\n\n********     *****************");
-			matchList = art.findLines();
-			for(Match item: matchList)
-			{
-				System.out.println(item.getText() + " at " + item.getX() + ", " + item.getY() + " - len " + item.getW() + " width " + item.getH());
-			}
-
-			for(Picking item : pickList)
-			{
-				System.out.println("Searching for " + item.getArticle() + " in textlist");
-				if ((m = getPosition(matchList, item.getArticle())) != null)
-				{
-					System.out.println("At " + m.getX() + ", " + m.getY() + " - len " + m.getW() + " width " + m.getH());
-					
-					r = new Region(m.getX()+112, m.getY(), 80, 18);
-//					r.highlight(1);
-					String wh = r.textLines().get(0);
-					if ((wh.compareTo("NLIT05") != 0) && (wh.compareTo("NLITOS") != 0))
-					{
-						r.click();
-						r.type("NLIT05");
-					}
-					r = new Region(r.getX()+153, r.getY(), 80, 18);
-//					r.highlight(1);
-					r.click();
-					r.type(item.getX() + Key.ENTER);
-					r = new Region(r.getX() + 105, r.getY(), 50, 18);
-//					r.highlight(1);
-					r.click();
-					r.type(item.getY() + Key.ENTER);
-					r = new Region(r.getX() + 65, r.getY(), 50, 18);
-//					r.highlight(1);
-					r.click();
-					r.type(item.getZ());
-				}
-			}
-			s.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
+			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
+		}
+		catch(Exception e)
+		{
 			
-			
-			m = s.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
-			r = new Region(m.getX() + 250, m.getY(), 200, 18);
-			DTVName = r.textLines().get(0);
-			DTVName = DTVName.substring(DTVName.indexOf("DTV") + 7);
+		}
+
+	}
+
+	public String getSalesIssueDTV()
+	{
+		try{
+			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
+			rItem = new Region(mItem.getX() + 300, mItem.getY(), 115, 20);
+			pauseExecution(2000);
+			System.out.println("Words found in the DTV field");
+			DTVName = "";
+			for(Match match : OCR.readWords(rItem, textOpt))
+			{
+				System.out.println("'" + match.getText() + "' At " + 
+						   match.getX() + ", " + match.getY() + 
+						   " - len " + match.getW() + " width " + match.getH());
+				DTVName += match.getText().toUpperCase();
+			}
 			System.out.println("DTVName " + DTVName);
+		}
+		catch(Exception e)
+		{
 			
-			r = new Region(122, 21, 151, 115);
-			menu.click("img/Menu_Functions.png");
-			r.click("img/Functions_Post.png");
-			r.wait(15.0);
-			r = new Region(1850,0,70,27);
-			r.click("img/X_CloseForm.png");
-			r = new Region(0, 0, 220, 1030);
-			s.click("img/Inventory_GoodsIssueButton.png");
-//			Thread.sleep(200);
-//			s.click("img/MainMenu_Save.png");
 		}
-		catch(Exception e){
-			e.printStackTrace();
-			return "KO";
-		}
-		
 		return DTVName;
+	}
+	
+	public void saveAndClose() 
+	{
+		Match match;
+		try
+		{
+			match = menu.find("img/Menu_Functions.png");
+			match.click();
+			pauseExecution(500);
+			
+			rItem = new Region(0, 0, 1920, 250);
+			match = rItem.find("img/Menu_Functions_FullInventoryIssue.png");
+			if (match == null)
+			{
+				System.out.println("Can't find Functions_Post image");
+			}
+			else
+			{
+				match.click();
+			}
+
+			pauseExecution(10000);
+			match  = rItem.find("img/X_CloseForm.png");
+			if (match == null)
+			{
+				System.out.println("Can't find window close button");
+			}
+			else
+			{
+				System.out.println("found closeform at " + 
+					match.getX() + ", " + match.getY() + 
+					" - len " + match.getW() + " width " + match.getH());
+			}
+			formHeader.click("img/X_CloseForm.png");
+			menu.click("img/Inventory_GoodsIssueButton.png");	
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+	}
+
+	public String enterData()
+	{
+		String imgPath = System.getProperty("user.dir");
+		ImagePath.add(imgPath);
+		
+		try{
+			if ((mItem = menu.exists("img/InforLogo.png")) == null)
+			{
+				if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
+				{
+					System.out.println("Infor non è in esecuzione");
+					System.exit(-1);
+				}
+				mItem.click();
+			}
+			menu.wait("img/InforLogo.png");
+			getSalesIssueFeatureOn();
+			
+			getSalesIssueData();
+			
+			appBody.wait("img/Inventory_GoodsIssue_SalesIssue_InputFormReady.png",2000.0);
+
+			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
+			
+			Match resourceTab = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");		
+			Region resourcesRegion = new Region(resourceTab.getX() - 10, resourceTab.getY() + 10, 120, 500);
+
+			enterSalesIssueInventory(resourcesRegion);
+			
+			enterSalesIssueCoordinates(resourcesRegion);
+			
+			getSalesIssueDTV();
+			
+			saveAndClose();
+		
+			return DTVName;
+		}
+		catch(Exception e)
+		{
+			System.out.println(e.getMessage());
+		}
+		return "";
+	}
+
+
+	
+	private boolean shownAsMenuEntries(String lookFor) {
+		String[] menuEntries = readMenuEntries();
+		
+		for(String menuItem : menuEntries)
+		{
+			if (menuItem.contains(lookFor))
+				return true;
+		}
+		return false;
 	}
 }

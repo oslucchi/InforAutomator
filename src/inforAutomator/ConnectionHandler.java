@@ -21,8 +21,11 @@ public class ConnectionHandler extends Thread
 	private byte[] lengthBytes = new byte[4];
 	private int packetLength = byteArrayToInt(lengthBytes);
 	
-    public ConnectionHandler(Socket clientSocket) {
+	private boolean highlight;
+	
+    public ConnectionHandler(Socket clientSocket, boolean highlight) {
         this.clientSocket = clientSocket;
+        this.highlight = highlight;
     }
 
 	private void handlePick() throws IOException
@@ -69,9 +72,9 @@ public class ConnectionHandler extends Thread
 		ArrayList<Picking> pickList = (ArrayList<Picking>) JavaJSONMapper.JSONArrayToJava(JavaJSONMapper.StringToJSONArray(pickListJson, true), Picking.class);
 		
 	    // Invoke the doSomething function and get the return value
-	    DTVFormFiller ff = new DTVFormFiller(pickList, orderRef);
+	    DTVFormFiller ff = new DTVFormFiller(pickList, orderRef, highlight);
 	    String DTVName = ff.enterData();
-	
+
 	    // Convert the return code to bytes
 	    byte[] returnCodeBytes = intToByteArray(DTVName.length());
 	

@@ -1,9 +1,11 @@
-package inforAutomator;
+package main.java.it.l_soft.InforAutomator;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import java.util.List;
 
+import org.sikuli.basics.Debug;
+import org.sikuli.basics.Settings;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Key;
 import org.sikuli.script.Match;
@@ -11,7 +13,7 @@ import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
-public class DTVFormFiller {	
+public class DTVFormFiller extends InforFunctions {	
 	final int FORM_HEADER_OFFSET_X = 220;
 	final int FORM_HEADER_OFFSET_Y = 0;
 	final int TOOLBAR_OFFSET_X = 0;
@@ -21,7 +23,7 @@ public class DTVFormFiller {
 	final int HIGHLIGHT_DURATION = 1;
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
-	boolean highlight = false;
+	Parameters parms;
 	Screen s = new Screen(1);
 	Match mItem = null;
 	Region menu, formHeader, appBody, rItem, toolBar, r;
@@ -29,11 +31,14 @@ public class DTVFormFiller {
 	OCR.Options textOpt;
 	List<Match> resources;
 	
-	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef, boolean highlight)
+	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef, Parameters parms)
 	{
 		this.pickList = pickList;
 		this.orderRef = orderRef;
-		this.highlight = highlight;
+		this.parms = parms;
+		Debug.off(); // any debugging messages
+		Settings.ActionLogs = false; // messages from click, ...
+		Settings.InfoLogs = false; //other information messages
 		menu = new Region(0, 0, 240, 1080);
 		highlightSelection(menu, HIGHLIGHT_DURATION);
 		toolBar = new Region(TOOLBAR_OFFSET_X, TOOLBAR_OFFSET_Y, 
@@ -61,7 +66,7 @@ public class DTVFormFiller {
 
 	public void highlightSelection(Object sikuliObj, int duration)
 	{
-		if (highlight)
+		if (parms.highlight)
 		{
 			String className = sikuliObj.getClass().getName();
 			className = className.substring(className.lastIndexOf('.') + 1);
@@ -153,22 +158,42 @@ public class DTVFormFiller {
 	
 	public void enterSalesIssueInventory(Region resourcesRegion)
 	{
+		HashMap<String, Integer> articlesPicked = new HashMap<String, Integer>();
+		
 		try{
 			resources = OCR.readLines(resourcesRegion, textOpt);
-			for(Picking item : pickList)
+			for(Picking item : pickList)				
 			{
+				String articleRef = item.getArticle().trim();
+				if (articlesPicked.containsKey(articleRef))
+				{
+					articlesPicked.replace(articleRef, articlesPicked.get(articleRef) + 1);
+				}
+				else
+				{
+					articlesPicked.put(articleRef, 1);
+				}
+				System.out.println(" Searching for article '" + articleRef + "' at instance " + articlesPicked.get(articleRef));
+
+				int instance = 1;
 				for(Match match : resources)
 				{
-					System.out.println("Comparing '" + match.getText() + "' to '"  + item.getArticle() + "'");
-					if (match.getText().compareTo(item.getArticle()) == 0)
+					System.out.println("Comparing '" + match.getText() + 
+									   "' to '"  + item.getArticle() + "' (instance " + instance + ")");				
+					if (match.getText().trim().compareTo(articleRef) == 0)
 					{
-						System.out.println(" found '" + match.getText() + "' At " + 
-										   match.getX() + ", " + match.getY() + 
-										   " - len " + match.getW() + " width " + match.getH());
-						rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 20, 18);
-						rItem.click();
-						rItem.type("1" + Key.ENTER);
-						break;
+						if (articlesPicked.get(articleRef) == instance)
+						{
+							System.out.println(" found '" + match.getText() + "' At " + 
+											   match.getX() + ", " + match.getY() + 
+											   " - len " + match.getW() + " width " + match.getH());
+							rItem = new Region(resourcesRegion.getX() + 130, resourcesRegion.getY() + match.getY(), 20, 17);
+							rItem.click();
+							rItem.type("1");
+							rItem.type(Key.ENTER);
+							break;
+						}
+						instance += 1;
 					}
 				}
 
@@ -182,6 +207,8 @@ public class DTVFormFiller {
 
 	public void enterSalesIssueCoordinates(Region resourcesRegion)
 	{
+		HashMap<String, Integer> articlesPicked = new HashMap<String, Integer>();
+		
 		try{
 			
 			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
@@ -194,34 +221,56 @@ public class DTVFormFiller {
 			pauseExecution(500);
 			for(Picking item : pickList)
 			{
+				if (articlesPicked.containsKey(item.getArticle()))
+				{
+					articlesPicked.replace(item.getArticle(), articlesPicked.get(item.getArticle()) + 1);
+				}
+				else
+				{
+					articlesPicked.put(item.getArticle(), 1);
+				}
+				int instance = 1;
 				for(Match match : resources)
 				{
 					System.out.println("Comparing '" + match.getText() + "' to '"  + item.getArticle() + "'");
 					if (match.getText().compareTo(item.getArticle()) == 0)
 					{						
-						System.out.println(" found '" + match.getText() + "' At " + 
-								   match.getX() + ", " + match.getY() + 
-								   " - len " + match.getW() + " width " + match.getH());
-						rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 150, 18);
-						String wh = OCR.readWord(rItem);
-						if (wh.compareTo("NLIT05") != 0)
+						if (articlesPicked.get(item.getArticle()) == instance)
 						{
+							System.out.println(" found '" + match.getText() + "' At " + 
+									   match.getX() + ", " + match.getY() + 
+									   " - len " + match.getW() + " width " + match.getH());
+							rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 150, 18);
+							String wh = OCR.readWord(rItem);
+							if (wh.compareTo("NLIT05") != 0)
+							{
+								rItem.click();
+								rItem.type("NLIT05");
+							}
+							
+							rItem = new Region(rItem.getX()+155, rItem.getY(), 100, 18);
 							rItem.click();
-							rItem.type("NLIT05");
+							rItem.type(Key.DELETE);
+							pauseExecution(200);
+							rItem.type(item.getX());
+							rItem.type(Key.ENTER);
+							
+							rItem = new Region(rItem.getX()+100, rItem.getY(), 70, 18);
+							rItem.click();
+							rItem.type(Key.DELETE);
+							pauseExecution(200);
+							rItem.type(item.getY());
+							rItem.type(Key.ENTER);
+		
+							rItem = new Region(rItem.getX()+70, rItem.getY(), 45, 18);
+							rItem.click();
+							rItem.type(Key.DELETE);
+							pauseExecution(200);
+							rItem.type(item.getZ());
+							rItem.type(Key.ENTER);
+							break;
 						}
-						
-						rItem = new Region(rItem.getX()+150, rItem.getY(), 100, 18);
-						rItem.click();
-						rItem.type(item.getX() + Key.ENTER);
-						
-						rItem = new Region(rItem.getX()+100, rItem.getY(), 70, 18);
-						rItem.click();
-						rItem.type(item.getY() + Key.ENTER);
-	
-						rItem = new Region(rItem.getX()+70, rItem.getY(), 45, 18);
-						rItem.click();
-						rItem.type(item.getZ() + Key.ENTER);
-						break;
+						instance += 1;
 					}
 				}
 			}
@@ -276,7 +325,10 @@ public class DTVFormFiller {
 			}
 			else
 			{
-				match.click();
+				if (!parms.testRun)
+				{
+					match.click();
+				}
 			}
 
 			pauseExecution(10000);
@@ -300,6 +352,7 @@ public class DTVFormFiller {
 		}
 	}
 
+	@Override
 	public String enterData()
 	{
 		String imgPath = System.getProperty("user.dir");
@@ -325,8 +378,9 @@ public class DTVFormFiller {
 			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
 			
 			Match resourceTab = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");		
-			Region resourcesRegion = new Region(resourceTab.getX() - 10, resourceTab.getY() + 10, 120, 500);
-
+			Region resourcesRegion = new Region(resourceTab.getX() - 2, resourceTab.getY() + 18, 120, 500);
+			highlightSelection(resourcesRegion, HIGHLIGHT_DURATION);
+			
 			enterSalesIssueInventory(resourcesRegion);
 			
 			enterSalesIssueCoordinates(resourcesRegion);

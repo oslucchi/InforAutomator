@@ -1,43 +1,39 @@
-package inforAutomator;
+package main.java.it.l_soft.InforAutomator;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.json.JsonObject;
 
-import org.sikuli.script.ImagePath;
-import org.sikuli.script.Key;
 import org.sikuli.script.KeyModifier;
 import org.sikuli.script.Match;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
-public class MoveStockFormFiller {
-	JsonObject sm;
-	private Match getPosition(List<Match> matchList, String article)
-	{
-		for(Match item: matchList)
-		{
-			if (item.getText().contains(article))
-			{
-				System.out.println(item.getText() + "found");
-				return item;
-			}
-		}
-		return null;
-	}
+public class MoveStockFormFiller extends InforFunctions {
+//	private Match getPosition(List<Match> matchList, String article)
+//	{
+//		for(Match item: matchList)
+//		{
+//			if (item.getText().contains(article))
+//			{
+//				System.out.println(item.getText() + "found");
+//				return item;
+//			}
+//		}
+//		return null;
+//	}
 
 	public MoveStockFormFiller(JsonObject sm)
 	{
 		this.sm = sm;
 	}
 
+	@Override
 	public String enterData()
 	{
 		Screen s = new Screen(0);
 		Match m = null;
 		Region r = null, menu = new Region(1, 14, 339, 28);
-		String DTVName = null;
 
 		try{
 			if ((m = s.exists("img/InforLogo.png")) == null)

@@ -1,4 +1,4 @@
-package inforAutomator;
+package main.java.it.l_soft.InforAutomator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,11 +21,12 @@ public class ConnectionHandler extends Thread
 	private byte[] lengthBytes = new byte[4];
 	private int packetLength = byteArrayToInt(lengthBytes);
 	
-	private boolean highlight;
+	private Parameters parms;
+	private InforFunctions ff;
 	
-    public ConnectionHandler(Socket clientSocket, boolean highlight) {
+    public ConnectionHandler(Socket clientSocket, Parameters parms) {
         this.clientSocket = clientSocket;
-        this.highlight = highlight;
+        this.parms = parms;
     }
 
 	private void handlePick() throws IOException
@@ -72,7 +73,15 @@ public class ConnectionHandler extends Thread
 		ArrayList<Picking> pickList = (ArrayList<Picking>) JavaJSONMapper.JSONArrayToJava(JavaJSONMapper.StringToJSONArray(pickListJson, true), Picking.class);
 		
 	    // Invoke the doSomething function and get the return value
-	    DTVFormFiller ff = new DTVFormFiller(pickList, orderRef, highlight);
+    	if (parms.simulator)
+		{
+    		ff = new Simulator().new DTV(pickList, orderRef);
+		}
+    	else
+    	{
+    		ff = new DTVFormFiller(pickList, orderRef, parms);
+    	}
+
 	    String DTVName = ff.enterData();
 
 	    // Convert the return code to bytes
@@ -104,7 +113,15 @@ public class ConnectionHandler extends Thread
 		JsonObject sm = JavaJSONMapper.StringToJSON(stockMoveJSON);
 	
 		// Invoke the doSomething function and get the return value
-	    MoveStockFormFiller ff = new MoveStockFormFiller(sm);
+    	if (parms.simulator)
+		{
+    		ff = new Simulator().new MoveStock();
+		}
+    	else
+    	{
+    		ff = new MoveStockFormFiller(sm);
+    	}
+
 	    String result = ff.enterData();
 	
 	    // Convert the return code to bytes
@@ -145,11 +162,11 @@ public class ConnectionHandler extends Thread
             switch(action)
             {
             case "PICK":
-            	handlePick();
+        		handlePick();
             	break;
-            	
+                	
             case "MOVE_STOCK":
-            	handleMoveStock();
+        		handleMoveStock();
             	break;
             }
         }

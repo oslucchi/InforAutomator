@@ -1,4 +1,4 @@
-package inforAutomator;
+package main.java.it.l_soft.InforAutomator;
 
 public class Picking {
 	private String article;

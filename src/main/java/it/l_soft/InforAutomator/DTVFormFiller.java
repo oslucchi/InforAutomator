@@ -245,7 +245,10 @@ public class DTVFormFiller extends InforFunctions {
 							if (wh.compareTo("NLIT05") != 0)
 							{
 								rItem.click();
+								rItem.type(Key.DELETE);
+								pauseExecution(200);
 								rItem.type("NLIT05");
+								rItem.type(Key.ENTER);
 							}
 							
 							rItem = new Region(rItem.getX()+155, rItem.getY(), 100, 18);

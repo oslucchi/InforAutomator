@@ -14,13 +14,6 @@ import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 public class DTVFormFiller extends InforFunctions {	
-	final int FORM_HEADER_OFFSET_X = 220;
-	final int FORM_HEADER_OFFSET_Y = 0;
-	final int TOOLBAR_OFFSET_X = 0;
-	final int TOOLBAR_OFFSET_Y = 980;
-	final int APPBODY_OFFSET_X = 220;
-	final int APPBODY_OFFSET_Y = 220;
-	final int HIGHLIGHT_DURATION = 1;
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
 	Parameters parms;
@@ -40,71 +33,28 @@ public class DTVFormFiller extends InforFunctions {
 		Settings.ActionLogs = false; // messages from click, ...
 		Settings.InfoLogs = false; //other information messages
 		menu = new Region(0, 0, 240, 1080);
-		highlightSelection(menu, HIGHLIGHT_DURATION);
-		toolBar = new Region(TOOLBAR_OFFSET_X, TOOLBAR_OFFSET_Y, 
-							 1920 - TOOLBAR_OFFSET_X, 1080 - TOOLBAR_OFFSET_Y);
-		highlightSelection(toolBar, HIGHLIGHT_DURATION);
-		formHeader = new Region(FORM_HEADER_OFFSET_X, FORM_HEADER_OFFSET_Y, 
-								1920 - FORM_HEADER_OFFSET_X, 250);
-		highlightSelection(formHeader, HIGHLIGHT_DURATION);
-		appBody = new Region(APPBODY_OFFSET_X, APPBODY_OFFSET_Y, 
-							 1920 - APPBODY_OFFSET_X, 1080 - APPBODY_OFFSET_Y);
-		highlightSelection(appBody, HIGHLIGHT_DURATION);
+		Utils.highlightSelection(parms, menu, Parameters.HIGHLIGHT_DURATION);
+		toolBar = new Region(Parameters.TOOLBAR_OFFSET_X, Parameters.TOOLBAR_OFFSET_Y, 
+							 1920 - Parameters.TOOLBAR_OFFSET_X, 1080 - Parameters.TOOLBAR_OFFSET_Y);
+		Utils.highlightSelection(parms, toolBar, Parameters.HIGHLIGHT_DURATION);
+		formHeader = new Region(Parameters.FORM_HEADER_OFFSET_X, Parameters.FORM_HEADER_OFFSET_Y, 
+								1920 - Parameters.FORM_HEADER_OFFSET_X, 250);
+		Utils.highlightSelection(parms, formHeader, Parameters.HIGHLIGHT_DURATION);
+		appBody = new Region(Parameters.APPBODY_OFFSET_X, Parameters.APPBODY_OFFSET_Y, 
+							 1920 - Parameters.APPBODY_OFFSET_X, 1080 - Parameters.APPBODY_OFFSET_Y);
+		Utils.highlightSelection(parms, appBody, Parameters.HIGHLIGHT_DURATION);
 		textOpt = OCR.globalOptions().fontSize(12);
 	}
 
-	private void pauseExecution(long mills)
-	{
-		try {
-			Thread.sleep(mills);
-		}
-		catch(Exception e)
-		{
-			
-		}
-	}
-
-	public void highlightSelection(Object sikuliObj, int duration)
-	{
-		if (parms.highlight)
-		{
-			String className = sikuliObj.getClass().getName();
-			className = className.substring(className.lastIndexOf('.') + 1);
-			switch(className)
-			{
-			case "Region":
-				((Region) sikuliObj).highlight(duration);
-				break;
-			case "Match":
-				((Match) sikuliObj).highlight(duration);
-				break;
-			}
-		}
-	}
-	
-	private String[] readMenuEntries()
-	{
-		List<Match> menuItems = OCR.readLines(menu, textOpt);
-		String[] menuEntries = new String[menuItems.size()];
-		int i = 0;
-		for(Match m : menuItems)
-		{
-			menuEntries[i++] = m.getText();				
-		}
-		
-		return menuEntries;
-	}
-	
-	
 	public void getSalesIssueFeatureOn()
 	{
 		try{
-			if (!shownAsMenuEntries("Goods issue"))
+			if (!Utils.shownAmongRegionEntries("Goods issue", menu, textOpt))
 			{
 				menu.click("img/InventoryButton.png");
 				menu.wait("img/InventoryMenuOpened.png");
 			}
-			if (!shownAsMenuEntries("Sales issue"))
+			if (!Utils.shownAmongRegionEntries("Sales issue", menu, textOpt))
 			{
 				menu.click("img/Inventory_GoodsIssueButton.png");
 			}
@@ -122,10 +72,10 @@ public class DTVFormFiller extends InforFunctions {
 			formHeader.wait("img/Inventory_GoodsIssue_SalesIssue_Form.png");
 			formHeader.click("img/Inventory_GoodsIssue_SalesIssue_PickListCheck.png");
 			mItem = formHeader.find("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
-			rItem = new Region(FORM_HEADER_OFFSET_X + mItem.x + 50, FORM_HEADER_OFFSET_Y + mItem.y, mItem.w - 50, 400);
+			rItem = new Region(Parameters.FORM_HEADER_OFFSET_X + mItem.x + 50, Parameters.FORM_HEADER_OFFSET_Y + mItem.y, mItem.w - 50, 400);
 			
 			rItem.click("img/ComboArrowDown.png");
-			pauseExecution(500);
+			Utils.pauseExecution(500);
 			
 			List<Match> ordersPicked = OCR.readLines(rItem, textOpt);
 			
@@ -214,11 +164,11 @@ public class DTVFormFiller extends InforFunctions {
 			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
 			mItem.click();
 			
-			rItem = new Region(APPBODY_OFFSET_X, mItem.y - 20, 1920 - APPBODY_OFFSET_X, 60);
+			rItem = new Region(Parameters.APPBODY_OFFSET_X, mItem.y - 20, 1920 - Parameters.APPBODY_OFFSET_X, 60);
 			rItem.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
 			System.out.println("\n\n********     *****************");
 			
-			pauseExecution(500);
+			Utils.pauseExecution(500);
 			for(Picking item : pickList)
 			{
 				if (articlesPicked.containsKey(item.getArticle()))
@@ -246,7 +196,7 @@ public class DTVFormFiller extends InforFunctions {
 							{
 								rItem.click();
 								rItem.type(Key.DELETE);
-								pauseExecution(200);
+								Utils.pauseExecution(200);
 								rItem.type("NLIT05");
 								rItem.type(Key.ENTER);
 							}
@@ -254,21 +204,21 @@ public class DTVFormFiller extends InforFunctions {
 							rItem = new Region(rItem.getX()+155, rItem.getY(), 100, 18);
 							rItem.click();
 							rItem.type(Key.DELETE);
-							pauseExecution(200);
+							Utils.pauseExecution(200);
 							rItem.type(item.getX());
 							rItem.type(Key.ENTER);
 							
 							rItem = new Region(rItem.getX()+100, rItem.getY(), 70, 18);
 							rItem.click();
 							rItem.type(Key.DELETE);
-							pauseExecution(200);
+							Utils.pauseExecution(200);
 							rItem.type(item.getY());
 							rItem.type(Key.ENTER);
 		
 							rItem = new Region(rItem.getX()+70, rItem.getY(), 45, 18);
 							rItem.click();
 							rItem.type(Key.DELETE);
-							pauseExecution(200);
+							Utils.pauseExecution(200);
 							rItem.type(item.getZ());
 							rItem.type(Key.ENTER);
 							break;
@@ -292,7 +242,7 @@ public class DTVFormFiller extends InforFunctions {
 		try{
 			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
 			rItem = new Region(mItem.getX() + 300, mItem.getY(), 115, 20);
-			pauseExecution(2000);
+			Utils.pauseExecution(2000);
 			System.out.println("Words found in the DTV field");
 			DTVName = "";
 			for(Match match : OCR.readWords(rItem, textOpt))
@@ -318,7 +268,7 @@ public class DTVFormFiller extends InforFunctions {
 		{
 			match = menu.find("img/Menu_Functions.png");
 			match.click();
-			pauseExecution(500);
+			Utils.pauseExecution(500);
 			
 			rItem = new Region(0, 0, 1920, 250);
 			match = rItem.find("img/Menu_Functions_FullInventoryIssue.png");
@@ -334,7 +284,7 @@ public class DTVFormFiller extends InforFunctions {
 				}
 			}
 
-			pauseExecution(10000);
+			Utils.pauseExecution(10000);
 			match  = rItem.find("img/X_CloseForm.png");
 			if (match == null)
 			{
@@ -382,7 +332,7 @@ public class DTVFormFiller extends InforFunctions {
 			
 			Match resourceTab = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");		
 			Region resourcesRegion = new Region(resourceTab.getX() - 2, resourceTab.getY() + 18, 120, 500);
-			highlightSelection(resourcesRegion, HIGHLIGHT_DURATION);
+			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
 			
 			enterSalesIssueInventory(resourcesRegion);
 			
@@ -399,18 +349,5 @@ public class DTVFormFiller extends InforFunctions {
 			System.out.println(e.getMessage());
 		}
 		return "";
-	}
-
-
-	
-	private boolean shownAsMenuEntries(String lookFor) {
-		String[] menuEntries = readMenuEntries();
-		
-		for(String menuItem : menuEntries)
-		{
-			if (menuItem.contains(lookFor))
-				return true;
-		}
-		return false;
 	}
 }

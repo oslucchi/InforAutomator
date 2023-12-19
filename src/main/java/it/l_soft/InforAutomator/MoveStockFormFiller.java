@@ -1,79 +1,109 @@
 package main.java.it.l_soft.InforAutomator;
 
-import java.util.List;
-
 import javax.json.JsonObject;
 
-import org.sikuli.script.KeyModifier;
+import org.sikuli.basics.Debug;
+import org.sikuli.basics.Settings;
+import org.sikuli.script.ImagePath;
+import org.sikuli.script.Key;
 import org.sikuli.script.Match;
+import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 public class MoveStockFormFiller extends InforFunctions {
-//	private Match getPosition(List<Match> matchList, String article)
-//	{
-//		for(Match item: matchList)
-//		{
-//			if (item.getText().contains(article))
-//			{
-//				System.out.println(item.getText() + "found");
-//				return item;
-//			}
-//		}
-//		return null;
-//	}
+	OCR.Options textOpt;
+	Parameters parms;
+	Screen s = new Screen(1);
+	Match mItem = null;
+	Region menu, formHeader, appBody, rItem, toolBar, r;
 
-	public MoveStockFormFiller(JsonObject sm)
+	public MoveStockFormFiller(JsonObject sm, Parameters parms)
 	{
 		this.sm = sm;
+		this.parms = parms;
+
+		Debug.off(); // any debugging messages
+		Settings.ActionLogs = false; // messages from click, ...
+		Settings.InfoLogs = false; //other information messages
+		menu = new Region(0, 0, 240, 1080);
+		Utils.highlightSelection(parms, menu, Parameters.HIGHLIGHT_DURATION);
+		toolBar = new Region(Parameters.TOOLBAR_OFFSET_X, Parameters.TOOLBAR_OFFSET_Y, 
+							 1920 - Parameters.TOOLBAR_OFFSET_X, 1080 - Parameters.TOOLBAR_OFFSET_Y);
+		Utils.highlightSelection(parms, toolBar, Parameters.HIGHLIGHT_DURATION);
+		formHeader = new Region(Parameters.FORM_HEADER_OFFSET_X, Parameters.FORM_HEADER_OFFSET_Y, 
+								1920 - Parameters.FORM_HEADER_OFFSET_X, 250);
+		Utils.highlightSelection(parms, formHeader, Parameters.HIGHLIGHT_DURATION);
+		appBody = new Region(Parameters.APPBODY_OFFSET_X, Parameters.APPBODY_OFFSET_Y, 
+							 1920 - Parameters.APPBODY_OFFSET_X, 1080 - Parameters.APPBODY_OFFSET_Y);
+		Utils.highlightSelection(parms, appBody, Parameters.HIGHLIGHT_DURATION);
+		textOpt = OCR.globalOptions().fontSize(12);
+		textOpt = OCR.globalOptions().fontSize(12);
+	}
+	
+	private void getInventoryInformationFeatureOn()
+	{
+		try{
+			if (!Utils.shownAmongRegionEntries("Information", menu, textOpt))
+			{
+				menu.click("img/InventoryButton.png");
+				Utils.pauseExecution(150);
+			}
+			if (!Utils.shownAmongRegionEntries("Inventory information", menu, textOpt))
+			{
+				menu.click("img/Inventory_Information.png");
+			}
+			menu.click("img/Inventory_Information_InventoryInformation.png");
+		}
+		catch(Exception e)
+		{
+			
+		}
 	}
 
 	@Override
 	public String enterData()
 	{
-		Screen s = new Screen(0);
-		Match m = null;
-		Region r = null, menu = new Region(1, 14, 339, 28);
-
+		String imgPath = System.getProperty("user.dir");
+		ImagePath.add(imgPath);
+		
 		try{
-			if ((m = s.exists("img/InforLogo.png")) == null)
+			if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
 			{
-				if ((m = s.exists("img/InforIcon.png")) == null)
-				{
-					System.out.println("Infor non è in esecuzione");
-					System.exit(-1);
-				}
-				m.click();
+				System.out.println("Infor non è in esecuzione");
+				System.exit(-1);
 			}
-			s.wait("img/InforLogo.png");
-			r = new Region(0, 0, 220, 1030);
+			mItem.click();
+			menu.wait("img/InforLogo.png");
 			
-			if ((m = r.exists("img/InventoryMenuOpened.png")) == null)
-			{
-				r.click("img/InventoryButton.png");
-			}
-			r.wait("img/InventoryMenuOpened.png");
-			r.click("img/Inventory_Information.png");
-			r.click("img/Inventory_Information_InventoryInformation.png");
-			r = new Region(800,100,500,130);
-			m = r.wait("img/Inventory_Information_InventoryInformation_Form.png");
-			int rFrom = 1100, rTo = 1380;
+			getInventoryInformationFeatureOn();
+			
+			mItem = formHeader.wait("img/Inventory_Information_InventoryInformation_Form.png");
+			mItem = formHeader.find("img/Inventory_Information_InventoryArea.png");
+
+			
 			String locationFrom[] = sm.getString("locationFrom").split("-");
-			String locationTo[] = sm.getString("locationTo").split("-");
+//			String locationTo[] = sm.getString("locationTo").split("-");
+
 			for(int i = 0; i < 4; i++)
 			{
-				r = new Region(rFrom,120 + i * 23, 190, 20);
-				r.highlight(1);
-				r.click();
-				r.type(locationFrom[i]);
-				r = new Region(rTo,120 + i * 23, 190, 20);
-				r.highlight(1);
-				r.click();
-				r.type(locationFrom[i]);
+				rItem = new Region(mItem.getX() + 251, mItem.getY() + 23 * i, 200, 23);
+				Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
+				Utils.pauseExecution(100);
+				rItem.click();
+				rItem.type(locationFrom[i]);
+				rItem.type(Key.TAB);
+				Utils.pauseExecution(100);
+				rItem.type(locationFrom[i]);
+				rItem.type(Key.DOWN);
+				Utils.pauseExecution(150);
 			}
-			
-			s.click("img/Inventory_Information_InventoryInformation_Load.png");
-			r = new Region(277, 291, 127, 16);
+			formHeader.click("img/Inventory_Information_InventoryInformation_Load.png");
+			System.out.println("Searching fora article '" + sm.getString("article") + "' in appBody");
+			mItem = appBody.find("img/1.png"); // new Region(277, 291, 127, 16);
+			rItem = new Region(appBody.getX() + mItem.getX() +10, mItem.getY(), 50, 17);
+			Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
+/*
 			r.click("img/ExpandSection.png");
 			r = new Region(292, 310, 168, 17);
 			r.click("img/ExpandSection.png");
@@ -85,13 +115,11 @@ public class MoveStockFormFiller extends InforFunctions {
 				System.out.println(item);
 			}
 
-			List<Match> matchList = r.collectLines();
-			System.out.println("using collectLines...");
+			List<Match> matchList = OCR.readLines(r, textOpt);
 			for(String item : rText)
 			{
 				System.out.println(item);
 			}
-
 			double quantity = 0;
 			double requiredQuantity = (double) sm.getInt("quantity");
 			r = new Region(235, 320, 40, 200);
@@ -161,8 +189,8 @@ public class MoveStockFormFiller extends InforFunctions {
 			r = new Region(122, 21, 151, 115);
 			menu.click("img/Menu_Functions.png");
 			r.click("img/Functions_Post.png");
-			m = s.wait("img/OKConfirm.png");
-			m.click();
+			mItem= s.wait("img/OKConfirm.png");
+			mItem.click();
 			s.wait("img/GoTo_Transfer_Completed.png");
 			s.click("img/OKButton.png");
 			s.wait("img/GoTo_Transfer_Completed_FileReloaded.png");
@@ -171,6 +199,7 @@ public class MoveStockFormFiller extends InforFunctions {
 			r.click("img/X_CloseForm.png");
 			r = new Region(0, 0, 220, 1030);
 			r.click("img/Inventory_Information.png");
+*/
 		}
 		catch(Exception e){
 			e.printStackTrace();

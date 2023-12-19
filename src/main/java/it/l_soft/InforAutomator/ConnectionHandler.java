@@ -119,7 +119,7 @@ public class ConnectionHandler extends Thread
 		}
     	else
     	{
-    		ff = new MoveStockFormFiller(sm);
+    		ff = new MoveStockFormFiller(sm, parms);
     	}
 
 	    String result = ff.enterData();

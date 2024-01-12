@@ -40,10 +40,11 @@ class MoveStockFormFillerTest {
 				"\"article\": \"094920104\", " +
 				"\"locationFrom\" : \"NLIT05-512-016-01\", " +
 				"\"locationTo\" : \"NLIT05-512-015-02\", " +
-				"\"quantiy\" : 26" +
+				"\"quantity\" : 26" +
 			 "}";
         try {
             Socket socket = new Socket(prop.getInforAutomatorHost(), prop.getInforAutomatorPort());
+            System.out.println("Connected, sending '" + stockMove + "'");
             OutputStream outputStream = socket.getOutputStream();
             InputStream inputStream = socket.getInputStream();
             byte[] lengthBytes;

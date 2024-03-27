@@ -184,6 +184,7 @@ public class MoveStockFormFiller extends InforFunctions {
 				requiredQuantity -= quantity[currentRow];
 			}
 
+			/*
 			mItem = menu.find("img/Menu_Functions.png");
 			mItem.click();
 			rItem = new Region(mItem.getX(), mItem.getY() + 15, 200, 300);
@@ -199,6 +200,7 @@ public class MoveStockFormFiller extends InforFunctions {
 			formHeader.click("img/X_CloseForm.png");
 			Utils.pauseExecution(300);
 			menu.click("img/Inventory_Information.png");
+			*/
 		}
 		catch(Exception e){
 			e.printStackTrace();

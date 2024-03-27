@@ -14,7 +14,8 @@ public class Parameters {
 	public boolean testRun = false;
 	public String inforAutomatorHost = "192.168.60.110";
 	public int inforAutomatorPort = 9000;
-	
+	public boolean debug = false;
+	public boolean postChanges = false;
 	
 	public String getInforAutomatorHost() {
 		return inforAutomatorHost;

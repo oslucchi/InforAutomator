@@ -114,23 +114,30 @@ public class DTVFormFiller extends InforFunctions {
 							   mItem.w - 50, 400);
 			
 			rItem.click("img/ComboArrowDown.png");
-			Utils.pauseExecution(500);
-			rItem = new Region(rItem.getX() - 20,rItem.getY() + 40, 120, 250);
-			rItem.highlight(1);
-			rItem.hover();
-			String[] orders = Utils.readTextEntries(rItem, textOpt);
-			for(String order : orders)
-			{
-				Debug.log("Entry in region: '" + order + "'");
-			}
+			Utils.pauseExecution(2000);
+			rItem = new Region(510, 200, 140, 150);
+//			Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
+//			
+//			rItem.hover();
+//			String[] orders = Utils.readTextEntries(rItem, textOpt);
+//			for(String order : orders)
+//			{
+//				Debug.log("Entry in region: '" + order + "'");
+//			}
 			
 			List<Match> ordersPicked = OCR.readLines(rItem, textOpt);
 			
 			Match entry = null;
+			String lookFor = orderRef.substring(2);
+			while (lookFor.startsWith("0"))
+			{
+				lookFor = lookFor.substring(1);
+			}
+			
 			for(int i = 0; i < ordersPicked.size(); i++)
 			{
-				Debug.log("Entry '" + ordersPicked.get(i).getText() + "', checking if '" + orderRef.substring(2) + "' is contained");
-				if (ordersPicked.get(i).getText().contains(orderRef.substring(2)))
+				Debug.log("Entry '" + ordersPicked.get(i).getText() + "', checking if '" + lookFor + "' is contained");
+				if (ordersPicked.get(i).getText().contains(lookFor))
 				{
 					Debug.log("Found, proceeding with click");
 					entry = ordersPicked.get(i);
@@ -336,31 +343,18 @@ public class DTVFormFiller extends InforFunctions {
 				if (!parms.testRun)
 				{
 					rItem = new Region(match.getX(), match.getY() + 20, 500, 400);
-					match = rItem.find("img/Menu_Functions_FullInventoryIssue.png");
+					match = rItem.find("img/Menu_Functions_Post.png");
 					match.click();
-					Utils.pauseExecution(10000);
+					rItem = new Region(200, 190, 300, 290);
+					rItem.wait("img/Inventory_GoodsIssue_SalesIssue_End.png");
 				}
 				else
 				{
 					match.click();
 					Debug.log("would have posted... but testRun is active");
-					Utils.pauseExecution(1000);
+					Utils.pauseExecution(3000);
 				}
 			}
-/*
-			match  = formHeader.find("img/X_CloseForm.png");
-			if (match == null)
-			{
-				Debug.log("Can't find window close button");
-			}
-			else
-			{
-				Debug.log("found closeform at " + 
-					match.getX() + ", " + match.getY() + 
-					" - len " + match.getW() + " width " + match.getH());
-			}
-			formHeader.click("img/X_CloseForm.png");
-*/
 		}
 		catch(Exception e)
 		{
@@ -395,7 +389,7 @@ public class DTVFormFiller extends InforFunctions {
 			
 			Match resourceTab = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");		
 			Region resourcesRegion = new Region(resourceTab.getX() - 2, resourceTab.getY() + 18, 120, 500);
-//			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
+			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
 			
 			enterSalesIssueInventory(resourcesRegion);
 			
@@ -412,10 +406,12 @@ public class DTVFormFiller extends InforFunctions {
 				Utils.pauseExecution(2000);
 			}
 			
-			rItem = new Region(1880, 0, 20, 20);
-			rItem.click();
-			menu.click("img/Inventory_GoodsIssueButton.png");	
-		
+			if (parms.closeFunctionAtEnd)
+			{
+				rItem = new Region(1880, 0, 20, 20);
+				rItem.click();
+				menu.click("img/Inventory_GoodsIssueButton.png");	
+			}		
 			return DTVName;
 		}
 		catch(Exception e)

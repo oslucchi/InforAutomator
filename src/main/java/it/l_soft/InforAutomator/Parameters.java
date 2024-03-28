@@ -16,6 +16,7 @@ public class Parameters {
 	public int inforAutomatorPort = 9000;
 	public boolean debug = false;
 	public boolean postChanges = false;
+	public boolean closeFunctionAtEnd = false;
 	
 	public String getInforAutomatorHost() {
 		return inforAutomatorHost;

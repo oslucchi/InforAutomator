@@ -9,7 +9,18 @@ public class InforAutomator {
 	private static Parameters parms = new Parameters();
 	
     public static void main(String[] args) {
-    	
+    	if (args.length == 0)
+    	{
+            System.out.println("usage: java -jar InforAutomator [OPT]");
+            System.out.println("\t--highlight | -h: enables highlighting of Regions, where configure, for better debuggin");
+            System.out.println("\t--simulator | -s: behaves as simulator responding without any effective action on INFOR");
+            System.out.println("\t--testRun | -t: it runs in test mode");
+            System.out.println("\t--debug | -d: enable debugging on local file");
+            System.out.println("\t--postChanges | -p: enables to post changes at the end of the pick function");
+            System.out.println("\t--closeFunctionAtEnd | -c: enable to close window after completion");
+            
+            System.exit(0);
+    	}
         for (String arg: args) {
         	switch(arg)
         	{
@@ -37,6 +48,11 @@ public class InforAutomator {
         	case "-p":
         		parms.postChanges = true;
         		break;
+
+        	case "--close":
+        	case "-c":
+        		parms.closeFunctionAtEnd= true;
+        		break;
         	}
         }
         
@@ -46,6 +62,7 @@ public class InforAutomator {
         System.out.println("\ttestRun: " + parms.testRun);
         System.out.println("\tdebug: " + parms.debug);
         System.out.println("\tpostChanges: " + parms.postChanges);
+        System.out.println("\tcloseFunctionAtEnd: " + parms.closeFunctionAtEnd);
         
         try {
             @SuppressWarnings("resource")

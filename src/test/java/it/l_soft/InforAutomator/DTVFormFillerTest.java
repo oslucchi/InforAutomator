@@ -95,6 +95,7 @@ class DTVFormFillerTest {
         catch(Exception e)
         {
         	assertTrue(i > 0);
+//        	assertTrue(true);
         }
 	}
 }

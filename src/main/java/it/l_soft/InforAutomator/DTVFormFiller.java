@@ -403,6 +403,7 @@ public class DTVFormFiller extends InforFunctions {
 			}
 			else
 			{
+				System.out.println("NOT POSTING CHANGES since postChanges var is false!!!");
 				Utils.pauseExecution(2000);
 			}
 			

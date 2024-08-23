@@ -22,6 +22,7 @@ public class InforAutomator {
             System.exit(0);
     	}
         for (String arg: args) {
+//        	System.out.println("Considering arg '" + arg + "'");
         	switch(arg)
         	{
         	case "--highlight":
@@ -45,11 +46,13 @@ public class InforAutomator {
         		break;
 
         	case "--post":
+        	case "--postChanges":
         	case "-p":
         		parms.postChanges = true;
         		break;
 
         	case "--close":
+        	case "--closeFunctionAtEnd":
         	case "-c":
         		parms.closeFunctionAtEnd= true;
         		break;

@@ -2,3 +2,7 @@ target/
 bin/
 lib/
 /InforAutomator.log
+/img
+/img-app/
+/img-ts/
+/logs/

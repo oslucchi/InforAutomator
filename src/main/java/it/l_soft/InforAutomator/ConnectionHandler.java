@@ -8,10 +8,13 @@ import java.util.ArrayList;
 
 import javax.json.JsonObject;
 
+import org.apache.log4j.Logger;
 import org.sikuli.script.ImagePath;
 
 public class ConnectionHandler extends Thread 
 {
+	private final Logger log = Logger.getLogger(this.getClass());
+	
     private final Socket clientSocket;
 
     private InputStream inputStream;
@@ -91,7 +94,7 @@ public class ConnectionHandler extends Thread
 	    outputStream.write(returnCodeBytes);
 	    outputStream.write(DTVName.getBytes());
 	    clientSocket.close();
-	    System.out.println("Connection closed.");
+	    log.trace("Connection closed.");
 	}
 
 	private void handleMoveStock() throws IOException
@@ -108,9 +111,9 @@ public class ConnectionHandler extends Thread
         inputStream.read(messageBytes);
         stockMoveJSON = new String(messageBytes);
        
-        System.out.println("Received message: " + stockMoveJSON);
-//        StockMove sm = (StockMove) JavaJSONMapper.JSONToJava(JavaJSONMapper.StringToJSON(stockMoveJSON), StockMove.class);
+        log.debug("Received message: " + stockMoveJSON);
 		JsonObject sm = JavaJSONMapper.StringToJSON(stockMoveJSON);
+		log.debug("Json object: '" + sm.toString() + "'");
 	
 		// Invoke the doSomething function and get the return value
     	if (parms.simulator)

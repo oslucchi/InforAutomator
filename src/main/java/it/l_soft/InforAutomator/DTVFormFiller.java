@@ -81,12 +81,12 @@ public class DTVFormFiller extends InforFunctions {
 	public void getSalesIssueFeatureOn()
 	{
 		try{
-			if (!Utils.shownAmongRegionEntries("Goods issue", menu, textOpt))
+			if (Utils.findTextInRegion("Goods issue", menu, textOpt) == null)
 			{
 				menu.click("img/InventoryButton.png");
 				menu.wait("img/InventoryMenuOpened.png");
 			}
-			if (!Utils.shownAmongRegionEntries("Sales issue", menu, textOpt))
+			if (Utils.findTextInRegion("Sales issue", menu, textOpt) == null)
 			{
 				menu.click("img/Inventory_GoodsIssueButton.png");
 				menu.mouseMove(0, 100);

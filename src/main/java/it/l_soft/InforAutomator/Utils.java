@@ -2,12 +2,14 @@ package main.java.it.l_soft.InforAutomator;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.sikuli.script.Match;
 import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
 
-public class Utils {
-	Parameters parms;
+
+public class Utils {	
+	final static Logger log = Logger.getLogger(Utils.class);
 	
 	static public void pauseExecution(long mills)
 	{
@@ -23,7 +25,7 @@ public class Utils {
 
 	static public void highlightSelection(Parameters parms, Object sikuliObj, int duration)
 	{
-		if (parms.highlight)
+		if (Parameters.getInstance().highlight)
 		{
 			String className = sikuliObj.getClass().getName();
 			className = className.substring(className.lastIndexOf('.') + 1);
@@ -36,6 +38,7 @@ public class Utils {
 				((Match) sikuliObj).highlight(duration);
 				break;
 			}
+			Utils.pauseExecution(500);
 		}
 	}
 	
@@ -53,39 +56,38 @@ public class Utils {
         return bytes;
     }
     
-	public static String[] readTextEntries(Region r, OCR.Options textOpt)
+	public static List<Match> getTextLineEntriesInRegion(Region r, OCR.Options textOpt)
 	{
 		List<Match> rItems = OCR.readLines(r, textOpt);
-		String[] rEntries = new String[rItems.size()];
-		int i = 0;
-		for(Match m : rItems)
-		{
-			rEntries[i++] = m.getText();				
-		}
+//		Match[] rEntries = new Match[rItems.size()];
+//		int i = 0;
+//		for(Match m : rItems)
+//		{
+//			Debug.log(String.format("Item at %d,%d len %d '%s'",
+//									m.getX(), m.getY(), m.getW(), m.getText()));
+//			rEntries[i].text = m.getText();				
+//			rEntries[i].x = m.getX();				
+//			rEntries[i].y = m.getY();				
+//			rEntries[i].w = m.getW();				
+//			rEntries[i].h = m.getH();				
+//		}
 		
-		return rEntries;
+		return rItems;
 	}
     
-	public static boolean shownAmongRegionEntries(String lookFor, Region r, OCR.Options textOpt) {
-		String[] menuEntries = readTextEntries(r, textOpt);
-		
-		for(String menuItem : menuEntries)
+	public static Match findTextInRegion(String lookFor, Region r, OCR.Options textOpt) {
+		List<Match> matches = OCR.readLines(r, textOpt); 
+		log.debug("Found " + matches.size() + " strings in region");
+		for(Match menuItem : matches)
 		{
-			if (menuItem.startsWith("(") && (menuItem.length() > 4))
+			log.debug("Investigating '" + menuItem.getText() + "'");
+			if (menuItem.getText().contains(lookFor))
 			{
-				menuItem = menuItem.substring(4);
-			}
-			if (menuItem.startsWith(">") && (menuItem.length() > 2))
-			{
-				menuItem = menuItem.substring(2);
-			}
-			if (menuItem.startsWith(lookFor))
-			{
-				System.out.println("Found on '" + menuItem + "'");
-				return true;
+				log.debug("Found the text we were looking for");
+				return menuItem;
 			}
 		}
-		return false;
+		return null;
 	}
 
 

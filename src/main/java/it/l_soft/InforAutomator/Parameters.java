@@ -1,5 +1,6 @@
 package main.java.it.l_soft.InforAutomator;
 
+
 public class Parameters {
 	static final int FORM_HEADER_OFFSET_X = 220;
 	static final int FORM_HEADER_OFFSET_Y = 0;
@@ -17,7 +18,24 @@ public class Parameters {
 	public boolean debug = false;
 	public boolean postChanges = false;
 	public boolean closeFunctionAtEnd = false;
+	public int useScreen = 0;
+	public int pauseAtStart = 0;
+	public boolean highlightMainRegions = false;
 	
+	private static Parameters instance = null;
+	public static Parameters getInstance()
+	{
+		if (instance == null)
+		{
+			instance = new Parameters();
+		}
+		return(instance);
+	}
+	
+	private Parameters()
+	{
+	}
+
 	public String getInforAutomatorHost() {
 		return inforAutomatorHost;
 	}

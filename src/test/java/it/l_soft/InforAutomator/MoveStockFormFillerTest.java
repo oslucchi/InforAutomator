@@ -13,7 +13,7 @@ import main.java.it.l_soft.InforAutomator.Utils;
 
 class MoveStockFormFillerTest {
 //	private static InforAutomator ia = new InforAutomator();
-	private static Parameters prop = new Parameters();
+	private static Parameters prop = Parameters.getInstance();
 	static String orderRef = "IM025534";
 
 	private enum InforActions {
@@ -37,10 +37,10 @@ class MoveStockFormFillerTest {
     	
 		String stockMove = 
 			"{" +
-				"\"article\": \"094920104\", " +
-				"\"locationFrom\" : \"NLIT05-512-016-01\", " +
-				"\"locationTo\" : \"NLIT05-512-015-02\", " +
-				"\"quantity\" : 26" +
+				"\"article\": \"010000050\", " +
+				"\"locationFrom\" : \"NLIT05-510-009-03\", " +
+				"\"locationTo\" : \"NLIT05-510-009-02\", " +
+				"\"quantity\" : 24" +
 			 "}";
         try {
             Socket socket = new Socket(prop.getInforAutomatorHost(), prop.getInforAutomatorPort());

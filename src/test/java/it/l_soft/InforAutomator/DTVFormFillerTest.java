@@ -13,7 +13,7 @@ import main.java.it.l_soft.InforAutomator.Utils;
 
 class DTVFormFillerTest {
 //	private static InforAutomator ia = new InforAutomator();
-	private static Parameters prop = new Parameters();
+	private static Parameters prop = Parameters.getInstance();
 	static String orderRef = "IM025534";
 
 	private enum InforActions {

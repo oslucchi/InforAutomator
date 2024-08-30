@@ -5,10 +5,16 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import org.apache.log4j.Logger;
+import org.sikuli.basics.Debug;
+import org.sikuli.script.Screen;
+
 public class InforAutomator {
-	private static Parameters parms = new Parameters();
+	private static Parameters parms = Parameters.getInstance();
 	
-    public static void main(String[] args) {
+    public static void main(String[] args) 
+    		throws NumberFormatException, InterruptedException {
+    	
     	if (args.length == 0)
     	{
             System.out.println("usage: java -jar InforAutomator [OPT]");
@@ -18,11 +24,15 @@ public class InforAutomator {
             System.out.println("\t--debug | -d: enable debugging on local file");
             System.out.println("\t--postChanges | -p: enables to post changes at the end of the pick function");
             System.out.println("\t--closeFunctionAtEnd | -c: enable to close window after completion");
-            
+            System.out.println("\t--screen use the screen number specified (default is 0)");
+            System.out.println("\t--info gives sikuli and other relevanti info");
+            System.out.println("\t--pauseToStart waits 5 seconds before starting to allow other setup to be done");
+            System.out.println("\t--highlightMain highlights the 5 main regions at startup *screen, menu, header, footer, app)");
             System.exit(0);
     	}
-        for (String arg: args) {
-//        	System.out.println("Considering arg '" + arg + "'");
+        for (int i = 0; i < args.length; i++) {
+        	String  arg = args[i];
+        	
         	switch(arg)
         	{
         	case "--highlight":
@@ -56,9 +66,38 @@ public class InforAutomator {
         	case "-c":
         		parms.closeFunctionAtEnd= true;
         		break;
+        		
+        	case "--screen":
+        		try {
+					parms.useScreen = Integer.valueOf(args[i + 1]);
+				} 
+        		catch (NumberFormatException e) {
+					parms.useScreen = 0;
+				}
+        		i += 1;
+        		break;
+        		
+        	case "--info":
+        		Screen.showMonitors();
+        		System.out.println(
+        				String.format("Screen details: # %d, X %g, Y %g, W %g, H %g",
+						parms.useScreen, 
+						Screen.getBounds(parms.useScreen).getX(),
+						Screen.getBounds(parms.useScreen).getY(),
+						Screen.getBounds(parms.useScreen).getWidth(),
+						Screen.getBounds(parms.useScreen).getHeight()));
+        		System.exit(0);
+        		break;
+
+        	case "--pauseAtStart":
+        		parms.pauseAtStart = Integer.valueOf(args[i + 1]) * 1000;
+        		i = i+1;
+        		break;
+        		
+        	case "--highlightMain":
+        		parms.highlightMainRegions = true;
         	}
         }
-        
         System.out.println("Parms configuration:");
         System.out.println("\thighlight: " + parms.highlight);
         System.out.println("\tsimulator: " + parms.simulator);
@@ -66,10 +105,30 @@ public class InforAutomator {
         System.out.println("\tdebug: " + parms.debug);
         System.out.println("\tpostChanges: " + parms.postChanges);
         System.out.println("\tcloseFunctionAtEnd: " + parms.closeFunctionAtEnd);
+        System.out.println("\tuseScreen: " + parms.useScreen);
+        System.out.println("\tpauseAtStart: " + parms.pauseAtStart);
+        System.out.println("\thighlightMain: " + parms.highlightMainRegions);
+
+        Logger log = Logger.getLogger(InforAutomator.class);
+        log.debug("Parms configuration:");
+        log.debug("\thighlight: " + parms.highlight);
+        log.debug("\tsimulator: " + parms.simulator);
+        log.debug("\ttestRun: " + parms.testRun);
+        log.debug("\tdebug: " + parms.debug);
+        log.debug("\tpostChanges: " + parms.postChanges);
+        log.debug("\tcloseFunctionAtEnd: " + parms.closeFunctionAtEnd);
+        log.debug("\tuseScreen: " + parms.useScreen);
+        log.debug("\tpauseAtStart: " + parms.pauseAtStart);
+        log.debug("\thighlightMain: " + parms.highlightMainRegions);
+        
+        if (parms.debug)
+        {
+        	Debug.setLogFile("./logs/sikuli.log");
+        	Debug.setDebugLevel(3);
+        }
         
         try {
             @SuppressWarnings("resource")
-//			ServerSocket serverSocket = new ServerSocket(9000, 0, InetAddress.getByName("192.168.11.131"));
 			ServerSocket serverSocket = new ServerSocket(9000);
             System.out.println("Server started. Listening on port 9000...");
              
@@ -79,6 +138,10 @@ public class InforAutomator {
                 System.out.println("Connection accepted from: " + clientSocket.getInetAddress());
 
                 // Spawn a new thread to handle the connection
+                if (parms.pauseAtStart > 0)
+                {
+                	Thread.sleep(parms.pauseAtStart);
+                }
                 Thread thread = new ConnectionHandler(clientSocket, parms);
                 thread.start();
             }
@@ -87,7 +150,8 @@ public class InforAutomator {
         }
     }
     
-    public void callFromTest(String[] args)
+    public void callFromTest(String[] args) 
+    		throws NumberFormatException, InterruptedException
     {
     	main(args);
     }

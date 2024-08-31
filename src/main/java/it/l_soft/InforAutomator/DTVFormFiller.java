@@ -1,28 +1,35 @@
 package main.java.it.l_soft.InforAutomator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
+import org.apache.log4j.Logger;
 import org.sikuli.basics.Debug;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Key;
+import org.sikuli.script.KeyModifier;
+import org.sikuli.script.Location;
 import org.sikuli.script.Match;
+import org.sikuli.script.Mouse;
 import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
 import org.sikuli.script.Screen;
 
 public class DTVFormFiller extends InforFunctions {	
+	private final Logger log = Logger.getLogger(this.getClass());
+
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
 	Parameters parms;
 	Screen s = new Screen(1);
 	Match mItem = null;
-	Region menu, formHeader, appBody, rItem, toolBar, r;
+	Region screen, menu, formHeader, appBody, rItem, toolBar, r;
 	String DTVName = null;
 	OCR.Options textOpt;
 	List<Match> resources;
+	int xOffset, yOffset, screenH, screenW;
+
 	
 	public DTVFormFiller(ArrayList<Picking> pickList, String orderRef, Parameters parms)
 	{
@@ -40,325 +47,327 @@ public class DTVFormFiller extends InforFunctions {
 		}
 		Settings.ActionLogs = false; // messages from click, ...
 		Settings.InfoLogs = false; //other information messages
-		menu = new Region(0, 0, 240, 1080);
-		Debug.log("Region menu at " + 
-				menu.getX() + ", " + 
-				menu.getY() + ", " + 
-				menu.getW() + ", " + 
-				menu.getH());
-		Utils.highlightSelection(parms, menu, Parameters.HIGHLIGHT_DURATION);
+		xOffset = (int) Screen.getBounds(parms.useScreen).getX();
+		yOffset = (int) Screen.getBounds(parms.useScreen).getY();
+		screenH  = (int) Screen.getBounds(parms.useScreen).getHeight();
+		screenW = (int) Screen.getBounds(parms.useScreen).getWidth();
+		log.debug(String.format("Screen details: # %d, X %d, Y %d, W %d, H%d",
+								parms.useScreen, xOffset, yOffset, screenW, screenH));
 
-		toolBar = new Region(Parameters.TOOLBAR_OFFSET_X, Parameters.TOOLBAR_OFFSET_Y, 
-							 1915 - Parameters.TOOLBAR_OFFSET_X, 1075 - Parameters.TOOLBAR_OFFSET_Y);
-		Debug.log("Region toolBar at " + 
-							 toolBar.getX() + ", " + 
-							 toolBar.getY() + ", " + 
-							 toolBar.getW() + ", " + 
-							 toolBar.getH());
+		screen = new Region(xOffset, yOffset, screenW, screenH);
+		if (parms.highlightMainRegions)
+		{
+			Utils.highlightSelection(parms, screen, Parameters.HIGHLIGHT_DURATION);
+		}
 		
-		Utils.highlightSelection(parms, toolBar, Parameters.HIGHLIGHT_DURATION);
+		Settings.ActionLogs = false; // messages from click, ...
+		Settings.InfoLogs = false; //other information messages
+		menu = new Region(xOffset, yOffset, 240, screenH);
+		log.debug(String.format("Region menu at: X %d, Y %d, W %d, H%d",
+				menu.getX(), menu.getY(), menu.getW() ,menu.getH()));
+		if (parms.highlightMainRegions)
+		{
+			Utils.highlightSelection(parms, menu, Parameters.HIGHLIGHT_DURATION);
+		}
+
+		toolBar = new Region(xOffset + Parameters.TOOLBAR_OFFSET_X,
+							 yOffset + Parameters.TOOLBAR_OFFSET_Y, 
+							 screenW - Parameters.TOOLBAR_OFFSET_X,
+							 screenH - Parameters.TOOLBAR_OFFSET_Y);
+		log.debug(String.format("Region toolBar at: X %d, Y %d, W %d, H%d",
+				toolBar.getX(), toolBar.getY(), toolBar.getW() ,toolBar.getH()));	
+		if (parms.highlightMainRegions)
+		{
+			Utils.highlightSelection(parms, toolBar, Parameters.HIGHLIGHT_DURATION);
+		}
 		
-		formHeader = new Region(Parameters.FORM_HEADER_OFFSET_X, Parameters.FORM_HEADER_OFFSET_Y, 
-								1915 - Parameters.FORM_HEADER_OFFSET_X, 250);
-		Debug.log("Region formHeader at " + 
-				formHeader.getX() + ", " + 
-				formHeader.getY() + ", " + 
-				formHeader.getW() + ", " + 
-				formHeader.getH());
-		Utils.highlightSelection(parms, formHeader, Parameters.HIGHLIGHT_DURATION);
+		formHeader = new Region(xOffset + Parameters.FORM_HEADER_OFFSET_X,
+								 yOffset + Parameters.FORM_HEADER_OFFSET_Y, 
+								 screenW - Parameters.FORM_HEADER_OFFSET_X,
+								 250);
+		log.debug(String.format("Region formHeader at: X %d, Y %d, W %d, H%d",
+				formHeader.getX(), formHeader.getY(), formHeader.getW() ,formHeader.getH()));		
+		if (parms.highlightMainRegions)
+		{
+			Utils.highlightSelection(parms, formHeader, Parameters.HIGHLIGHT_DURATION);
+		}
 		
-		appBody = new Region(Parameters.APPBODY_OFFSET_X, Parameters.APPBODY_OFFSET_Y, 
-							 1915 - Parameters.APPBODY_OFFSET_X, 1075 - Parameters.APPBODY_OFFSET_Y);
-		Debug.log("Region appBody at " + 
-				appBody.getX() + ", " + 
-				appBody.getY() + ", " + 
-				appBody.getW() + ", " + 
-				appBody.getH());
-		Utils.highlightSelection(parms, appBody, Parameters.HIGHLIGHT_DURATION);
-		textOpt = OCR.globalOptions().fontSize(12);
+		appBody = new Region(xOffset + Parameters.APPBODY_OFFSET_X,
+								 yOffset + Parameters.APPBODY_OFFSET_Y, 
+								 screenW - Parameters.APPBODY_OFFSET_X,
+								 screenH - Parameters.APPBODY_OFFSET_Y);
+		log.debug(String.format("Region appBody at: X %d, Y %d, W %d, H%d",
+				appBody.getX(), appBody.getY(), appBody.getW() ,appBody.getH()));		
+		if (parms.highlightMainRegions)
+		{
+			Utils.highlightSelection(parms, appBody, Parameters.HIGHLIGHT_DURATION);
+		}
+		textOpt = OCR.globalOptions().fontSize(9);
 	}
 
-	public void getSalesIssueFeatureOn()
+	private boolean getSalesIssueFeatureOn()
 	{
+		Match m;
+		log.debug("Check if the Inventory menu is exposed already");
 		try{
-			if (Utils.findTextInRegion("Goods issue", menu, textOpt) == null)
-			{
-				menu.click("img/InventoryButton.png");
-				menu.wait("img/InventoryMenuOpened.png");
-			}
-			if (Utils.findTextInRegion("Sales issue", menu, textOpt) == null)
-			{
-				menu.click("img/Inventory_GoodsIssueButton.png");
-				menu.mouseMove(0, 100);
-				Utils.pauseExecution(200);
-				menu.wait("img/Inventory_GoodsIssue_SalesIssue.png");
-				Utils.pauseExecution(200);
-			}
-			menu.click("img/Inventory_GoodsIssue_SalesIssue.png");
+			menu.find("img/Inventory_Menu_Exposed.png");
 		}
 		catch(Exception e)
 		{
-			
+			Utils.pauseExecution(1000);
+			log.debug("It seems it is not opened, click on Inventory button");
+			try {
+				menu.click("img/InventoryButton.png");
+			}
+			catch(Exception e1)
+			{
+				Utils.pauseExecution(1000);
+				log.error("Can't get Inventory menu opened. Aborting function", e1);
+				return false;
+			}
 		}
+		log.trace("The Inventory Menu should now is exposed");
+
+		log.debug("Check if 'Sales issue' is already exposed on menu");
+		
+		if ((m = Utils.findTextInRegion("Sales issue", menu, textOpt)) == null)
+		{
+			log.debug("Sales issue option is not exposed, expand the GoodsIssue option");
+			try {
+				menu.click("img/Inventory_GoodsIssueButton.png");
+				Utils.pauseExecution(500);
+			}
+			catch(Exception e)
+			{
+				log.error("Can't opened the Sales issue option. Aborting function");
+				return false;
+			}
+		}
+		log.trace("The Sales issue option is exposed");
+		Mouse.move(50, 0);
+
+		if ((m = Utils.findTextInRegion("Sales issue", menu, textOpt)) == null)
+		{
+			log.error("Can't see the Sales issue option. Aborting function");
+			return false;
+		}
+		
+		Location l = new Location(xOffset+m.getX() + 10, yOffset+m.getY()+5); 
+		Mouse.move(l);
+		log.debug("Click on Sales issue button at " + Mouse.at().toString());
+		Mouse.click(l, "L", 1);
+		
+		return true;		
 	}
 	
-	public void getSalesIssueData()
+	private boolean getSalesIssueData()
 	{
 		try{
-			formHeader.wait("img/Inventory_GoodsIssue_SalesIssue_Form.png");
+			if (formHeader.exists("img/Inventory_GoodsIssue_SalesIssue_InputFormReady.png",20) == null)
+			{
+				log.debug("The header form to pick items did not show up, abort");
+				return false;
+			}
+
 			formHeader.click("img/Inventory_GoodsIssue_SalesIssue_PickListCheck.png");
 			Utils.pauseExecution(300);
-			mItem = formHeader.find("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
-			rItem = new Region(Parameters.FORM_HEADER_OFFSET_X + mItem.x + 50, 
-							   Parameters.FORM_HEADER_OFFSET_Y + mItem.y, 
-							   mItem.w - 50, 400);
-			
-			rItem.click("img/ComboArrowDown.png");
-			Utils.pauseExecution(2000);
-			rItem = new Region(510, 200, 140, 150);
-//			Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
-//			
-//			rItem.hover();
-//			String[] orders = Utils.readTextEntries(rItem, textOpt);
-//			for(String order : orders)
-//			{
-//				Debug.log("Entry in region: '" + order + "'");
-//			}
-			
-			List<Match> ordersPicked = OCR.readLines(rItem, textOpt);
-			
-			Match entry = null;
-			String lookFor = orderRef.substring(2);
-			while (lookFor.startsWith("0"))
+			mItem = formHeader.exists("img/Inventory_GoodsIssue_SalesIssue_OrderNoCombo.png");
+			if (mItem == null)
 			{
-				lookFor = lookFor.substring(1);
+				log.debug("The Order no. combo box wasn't found on screen");
+				return false;
+			}
+			Location l = new Location(mItem.getX() + mItem.getW() - 10, mItem.getY() + 10);
+			Mouse.click(l, "L", 1);
+			screen.type(orderRef);
+			screen.type(Key.ENTER);
+
+			if (screen.exists("img/No_Data_Record_Found.png", 3) != null)
+			{
+				log.error("L'ordine '" + orderRef + "' non e' stato trovato");
+				screen.type(Key.ENTER);
+				return false;
 			}
 			
-			for(int i = 0; i < ordersPicked.size(); i++)
+			if (appBody.exists("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png", 10) == null)
 			{
-				Debug.log("Entry '" + ordersPicked.get(i).getText() + "', checking if '" + lookFor + "' is contained");
-				if (ordersPicked.get(i).getText().contains(lookFor))
-				{
-					Debug.log("Found, proceeding with click");
-					entry = ordersPicked.get(i);
-					break;
-				}
+				log.debug("The could not get the pick form out, abort");
+				return false;
 			}
-			if (entry == null)
-			{
-				Debug.log("Ordine non trovato");
-				System.exit(-1);
-			}
-			
-			rItem = new Region(rItem.x + entry.x, rItem.y + entry.y, entry.w, entry.h);
-			rItem.click();
-			
-			formHeader.click("img/Inventory_GoodsIssue_LoadButton.png");
+
 		}
 		catch(Exception e)
 		{
-			
+			log.error("Exception " + e.getMessage() + " in enterSalesIssueCoordinates");
+			return false;
 		}
+		return true;
 	}
 	
-	public void enterSalesIssueInventory(Region resourcesRegion)
+
+	private boolean enterSalesIssueCoordinates(Region resourcesRegion, ArrayList<String> articles)
 	{
-		HashMap<String, Integer> articlesPicked = new HashMap<String, Integer>();
-		
 		try{
-			resources = OCR.readLines(resourcesRegion, textOpt);
-			Debug.log("OCR found " + resources.size() + " resources on resourcesRegion");
-			for(Picking item : pickList)				
-			{
-				String articleRef = item.getArticle().trim();
-				if (articlesPicked.containsKey(articleRef))
-				{
-					articlesPicked.replace(articleRef, articlesPicked.get(articleRef) + 1);
-				}
-				else
-				{
-					articlesPicked.put(articleRef, 1);
-				}
-				Debug.log(" Searching for article '" + articleRef + "' at instance " + articlesPicked.get(articleRef));
-
-				int instance = 1;
-				for(Match match : resources)
-				{
-					Debug.log("Comparing '" + match.getText() + 
-									   "' to '"  + item.getArticle() + "' (instance " + instance + ")");				
-					if (match.getText().trim().indexOf(articleRef) >= 0)
-					{
-						if (articlesPicked.get(articleRef) == instance)
-						{
-							Debug.log(" found '" + match.getText() + "' At " + 
-											   match.getX() + ", " + match.getY() + 
-											   " - len " + match.getW() + " width " + match.getH());
-							rItem = new Region(resourcesRegion.getX() + 130, resourcesRegion.getY() + match.getY(), 20, 17);
-							rItem.click();
-							rItem.type("1");
-							rItem.type(Key.ENTER);
-							break;
-						}
-						instance += 1;
-					}
-				}
-
-			}
-		}
-		catch(Exception e)
-		{
-			
-		}
-	}
-
-	public void enterSalesIssueCoordinates(Region resourcesRegion)
-	{
-		HashMap<String, Integer> articlesPicked = new HashMap<String, Integer>();
-		
-		try{
-			
-			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
+			mItem = appBody.exists("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
 			mItem.click();
+			Utils.pauseExecution(250);
 			
-			rItem = new Region(Parameters.APPBODY_OFFSET_X, mItem.y - 20, 1920 - Parameters.APPBODY_OFFSET_X, 60);
-			rItem.wait("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTabReady.png");
-			Debug.log("\n\n********     *****************");
-			
-			Utils.pauseExecution(500);
-			for(Picking item : pickList)
+			Location l = new Location(resourcesRegion.aboveAt().getX(), resourcesRegion.getY() + 10);
+			Mouse.click(l, "L", 1);
+
+			for(int i = 0; i < articles.size(); i++)
 			{
-				if (articlesPicked.containsKey(item.getArticle()))
+				screen.type("a", KeyModifier.CTRL);
+				screen.type("c", KeyModifier.CTRL);
+				// Move to the X-Coordinate column
+				screen.type(Key.TAB);
+				Utils.pauseExecution(100);
+				String article = Utils.getClipboardContents();
+				log.debug("Setting PID for article '" + article + "'");
+				boolean artFound = false;
+				for(Picking item : pickList)				
 				{
-					articlesPicked.replace(item.getArticle(), articlesPicked.get(item.getArticle()) + 1);
-				}
-				else
-				{
-					articlesPicked.put(item.getArticle(), 1);
-				}
-				int instance = 1;
-				for(Match match : resources)
-				{
-					Debug.log("Comparing '" + match.getText() + "' to '"  + item.getArticle() + "'");
-					if (match.getText().indexOf(item.getArticle()) >= 0)
-					{						
-						if (articlesPicked.get(item.getArticle()) == instance)
-						{
-							Debug.log(" found '" + match.getText() + "' At " + 
-									   match.getX() + ", " + match.getY() + 
-									   " - len " + match.getW() + " width " + match.getH());
-							rItem = new Region(resourcesRegion.getX() + 140, resourcesRegion.getY() + match.getY(), 150, 18);
-							Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
-							String wh = OCR.readWord(rItem).trim();
-							if (!wh.contains("NLIT05"))
-							{
-								rItem.click();
-//								rItem.type(Key.DELETE);
-								Utils.pauseExecution(200);
-								rItem.type("NLIT05");
-								rItem.type(Key.ENTER);
-								Utils.pauseExecution(200);
-							}
-							
-							rItem = new Region(rItem.getX()+145, rItem.getY(), 90, 18);
-							Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
-							rItem.click();
-//							rItem.type(Key.DELETE);
-							Utils.pauseExecution(200);
-							rItem.type(item.getX());
-							rItem.type(Key.ENTER);
-							Utils.pauseExecution(200);
-							
-							rItem = new Region(rItem.getX()+100, rItem.getY(), 70, 18);
-							Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
-							rItem.click();
-//							rItem.type(Key.DELETE);
-							Utils.pauseExecution(200);
-							rItem.type(item.getY());
-							rItem.type(Key.ENTER);
-							Utils.pauseExecution(200);
-		
-							rItem = new Region(rItem.getX()+70, rItem.getY(), 45, 18);
-							Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
-							rItem.click();
-//							rItem.type(Key.DELETE);
-							Utils.pauseExecution(200);
-							rItem.type(item.getZ());
-							rItem.type(Key.ENTER);
-							Utils.pauseExecution(200);
-							break;
-						}
-						instance += 1;
+					log.debug("Considering article '" + item.getArticle() + "' from pickList");
+					if (item.getArticle().compareTo(article) != 0)
+						continue;
+					screen.type(item.getWh());
+					screen.type(Key.TAB);
+					screen.type(item.getX());
+					screen.type(Key.TAB);
+					Utils.pauseExecution(100);
+					screen.type(item.getY());
+					screen.type(Key.TAB);
+					Utils.pauseExecution(100);
+					screen.type(item.getZ());
+					screen.type(Key.TAB);
+					Utils.pauseExecution(100);
+					for(int y = 0; y < 3; y++)
+					{
+						screen.type(Key.TAB);
+						Utils.pauseExecution(100);
 					}
+					artFound = true;
+					break;
+				}
+				if (!artFound)
+				{
+					log.debug("Can't find article '" + article + "' in PickList. Aborting");
+					return false;
 				}
 			}
-
+			
 			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
 		}
 		catch(Exception e)
 		{
-			
+			log.error("Exception " + e.getMessage() + " in enterSalesIssueCoordinates");
+			return false;
 		}
-
+		return true;
 	}
 
-	public String getSalesIssueDTV()
+	private boolean enterSalesIssueInventory()
 	{
+		ArrayList<String> articles;
+		
+		Region resourcesRegion;
+		Match m;
+//		parms.highlight = true;
 		try{
-			mItem = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
-			rItem = new Region(mItem.getX() + 300, mItem.getY(), 115, 20);
-			Utils.pauseExecution(2000);
-			Debug.log("Words found in the DTV field");
-			DTVName = "";
-			for(Match match : OCR.readWords(rItem, textOpt))
+			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
+			
+			if ((m = appBody.exists("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png")) == null)
 			{
-				Debug.log("'" + match.getText() + "' At " + 
-						   match.getX() + ", " + match.getY() + 
-						   " - len " + match.getW() + " width " + match.getH());
-				DTVName += match.getText().toUpperCase();
+				log.debug("Non ho trovato la colonna Reources sul tab Inventory");
+				return false;
 			}
-			Debug.log("DTVName " + DTVName);
+			log.debug("Colonna delle risorse a " + m.leftAt().toString());
+			
+			resourcesRegion = new Region(m.getX() - 2, m.getY() + 18, 120, 500);
+			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
+
+			articles = Utils.runTesseractOnRegion(resourcesRegion, null, true);
+			log.debug("Found " + articles.size() + " items in form (" + articles.toString());
+
+			Location l = new Location(resourcesRegion.aboveAt().getX(), resourcesRegion.getY() + 10);
+
+			for(int i = 0; i < articles.size(); i++)
+			{
+				Mouse.click(l, "L", 1);
+				screen.type("a", KeyModifier.CTRL);
+				screen.type("c", KeyModifier.CTRL);
+				screen.type(Key.TAB);
+				String article = Utils.getClipboardContents();
+				log.debug("Setting PID for arti	cle '" + article + "'");
+				boolean artFound = false;
+				for(Picking item : pickList)				
+				{
+					log.debug("Considering article '" + item.getArticle() + "' from pickList");
+					if (item.getArticle().compareTo(article) != 0)
+						continue;
+					screen.type("1");
+					artFound = true;
+					break;
+				}
+				if (!artFound)
+				{
+					log.debug("Can't find article '" + article + "' in PickList. Aborting");
+					return false;
+				}
+				l = new Location(l.getX(), l.getY() + 20);
+			}
 		}
 		catch(Exception e)
 		{
-			
+			log.error("Exception " + e.getMessage() + " in enterSalesIssueInventory");
+			return false;
+		}
+		finally 
+		{
+//			parms.highlight = false;
+		}
+		return enterSalesIssueCoordinates(resourcesRegion, articles);
+	}
+
+	private String getSalesIssueDTV()
+	{
+		DTVName = "";
+		
+		try{
+			mItem = appBody.exists("img/Inventory_GoodsIssue_SalesIssue_InputForm_ASN.png");
+			Location l = new Location(mItem.getX() + 350, mItem.getY() + 10);
+			Mouse.click(l, "D", 1);
+			screen.type("c", KeyModifier.CTRL);
+			DTVName = Utils.getClipboardContents();
+			log.debug("DTVName " + DTVName);
+		}
+		catch(Exception e)
+		{
+			log.error("Exception " + e.getMessage() + " in enterSalesIssueInventory");
 		}
 		return DTVName;
 	}
 	
-	public void postData() 
+	private void postData() 
 	{
 		Match match;
 		try
 		{
-			match = menu.find("img/Menu_Functions.png");
+			match = menu.exists("img/SaveIcon.png");
 			
 			if (match == null)
 			{
-				Debug.log("Can't find Functions_Post image");
+				log.debug("Can't find the Save icon, aborting post");
 			}
 			else
 			{
 				match.click();
-				Utils.pauseExecution(500);
-				if (!parms.testRun)
-				{
-					rItem = new Region(match.getX(), match.getY() + 20, 500, 400);
-					match = rItem.find("img/Menu_Functions_Post.png");
-					match.click();
-					rItem = new Region(200, 190, 300, 290);
-					rItem.wait("img/Inventory_GoodsIssue_SalesIssue_End.png");
-				}
-				else
-				{
-					match.click();
-					Debug.log("would have posted... but testRun is active");
-					Utils.pauseExecution(3000);
-				}
+				screen.exists("img/Inventory_GoodsIssue_SalesIssue_End.png", 30);
 			}
 		}
 		catch(Exception e)
 		{
-			Debug.log(e.getMessage());
+			log.error(e.getMessage());
 		}
 	}
 
@@ -369,34 +378,25 @@ public class DTVFormFiller extends InforFunctions {
 		ImagePath.add(imgPath);
 		
 		try{
-			if ((mItem = menu.exists("img/InforLogo.png")) == null)
+			if ((mItem = screen.exists("img/InforLogo.png")) == null)
 			{
+				log.debug("La finestra di INFOR non e' aperta, cerco l'icona");
+
 				if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
 				{
-					Debug.log("Infor non è in esecuzione");
+					log.debug("Icona INFOR non trovata, non è in esecuzione. Esco");
 					System.exit(-1);
 				}
 				mItem.click();
+				menu.wait("img/InforLogo.png");
 			}
-			menu.wait("img/InforLogo.png");
-			getSalesIssueFeatureOn();
-			
-			getSalesIssueData();
-			
-			appBody.wait("img/Inventory_GoodsIssue_SalesIssue_InputFormReady.png",2000.0);
 
-			appBody.click("img/Inventory_GoodsIssue_SalesIssue_InputForm_InventoryTab.png");
-			
-			Match resourceTab = appBody.find("img/Inventory_GoodsIssue_SalesIssue_InputForm_Resource.png");		
-			Region resourcesRegion = new Region(resourceTab.getX() - 2, resourceTab.getY() + 18, 120, 500);
-			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
-			
-			enterSalesIssueInventory(resourcesRegion);
-			
-			enterSalesIssueCoordinates(resourcesRegion);
-			
+			if (!getSalesIssueFeatureOn()) return "KO";
+			if (!getSalesIssueData()) return "KO";
+			if (!enterSalesIssueInventory()) return "KO";
+						
 			getSalesIssueDTV();
-			Debug.log("Shall I post changes? " + parms.postChanges);
+			log.debug("Shall I post changes? " + parms.postChanges);
 			if (parms.postChanges)
 			{
 				postData();
@@ -409,16 +409,18 @@ public class DTVFormFiller extends InforFunctions {
 			
 			if (parms.closeFunctionAtEnd)
 			{
-				rItem = new Region(1880, 0, 20, 20);
-				rItem.click();
+				formHeader.click("img/Main_Window_Close.png");
+				Utils.pauseExecution(2000);
 				menu.click("img/Inventory_GoodsIssueButton.png");	
+				Utils.pauseExecution(500);
+				menu.click("img/Sales_Button.png");
 			}		
 			return DTVName;
 		}
 		catch(Exception e)
 		{
-			Debug.log(e.getMessage());
+			log.error(e.getMessage());
+			return "KO";
 		}
-		return "";
 	}
 }

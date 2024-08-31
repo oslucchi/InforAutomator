@@ -14,7 +14,7 @@ public class InforAutomator {
 	
     public static void main(String[] args) 
     		throws NumberFormatException, InterruptedException {
-    	
+
     	if (args.length == 0)
     	{
             System.out.println("usage: java -jar InforAutomator [OPT]");

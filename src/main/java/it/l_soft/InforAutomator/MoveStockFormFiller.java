@@ -402,7 +402,7 @@ public class MoveStockFormFiller extends InforFunctions {
 		try{
 			if ((mItem = screen.exists("img/InforLogo.png")) == null)
 			{
-				log.debug("La finestra di INFOR non [ aperta, cerco l'icona");
+				log.debug("La finestra di INFOR non e' aperta, cerco l'icona");
 
 				if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
 				{
@@ -410,8 +410,9 @@ public class MoveStockFormFiller extends InforFunctions {
 					System.exit(-1);
 				}
 				mItem.click();
+				menu.wait("img/InforLogo.png");
 			}
-			menu.wait("img/InforLogo.png");
+
 			if (!getInventoryMovementsFeatureOn()) return "KO";
 			if (!getLocationContent()) return "KO";
 

@@ -2,6 +2,7 @@ package main.java.it.l_soft.InforAutomator;
 
 public class Picking {
 	private String article;
+	private String wh;
 	private String x;
 	private String y;
 	private String z;
@@ -31,6 +32,13 @@ public class Picking {
 	public void setZ(String z) {
 		this.z = z;
 	}
-	
+
+	public String getWh() {
+		return wh;
+	}
+
+	public void setWh(String wh) {
+		this.wh = wh;
+	}
 	
 }

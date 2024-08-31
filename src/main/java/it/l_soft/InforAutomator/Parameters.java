@@ -1,6 +1,14 @@
 package main.java.it.l_soft.InforAutomator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Locale;
+import java.util.Properties;
+
+import org.apache.log4j.PropertyConfigurator;
+
 
 public class Parameters {
 	static final int FORM_HEADER_OFFSET_X = 220;
@@ -37,6 +45,50 @@ public class Parameters {
 	
 	private Parameters()
 	{
+		Properties properties = new Properties();
+    	try 
+    	{
+    		File confFile = new File("./conf/log4j.properties");
+        	InputStream in = new FileInputStream(confFile);
+        	properties.load(in);
+	    	in.close();
+	    	PropertyConfigurator.configure(properties);
+	    }
+    	catch(IOException e) 
+    	{
+			System.out.println("Exception getting log4j properties " + e.getMessage());
+			e.printStackTrace();
+		}
+
+
+    	try 
+    	{
+    		File confFile = new File("./conf/package.properties");
+        	InputStream in = new FileInputStream(confFile);
+        	properties.load(in);
+	    	in.close();
+		}
+    	catch(IOException e) 
+    	{
+			System.out.println("Exception getting package properties " + e.getMessage());
+    		return;
+		}
+
+    	pathToTesseract = properties.getProperty("pathToTesseract");
+    	switch(properties.getProperty("appLocale"))
+    	{
+    	case "ENGLISH":
+        	appLocale = Locale.ENGLISH;
+        	break;
+    	case "ITALIAN":
+        	appLocale = Locale.ITALIAN;
+        	break;
+    	case "GERMAN":
+        	appLocale = Locale.GERMAN;
+        	break;
+    	}
+    	inforAutomatorHost = properties.getProperty("inforAutomatorHost");
+    	inforAutomatorPort = Integer.valueOf(properties.getProperty("inforAutomatorPort"));
 	}
 
 	public String getInforAutomatorHost() {

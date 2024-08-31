@@ -172,7 +172,9 @@ public class Utils {
 
             // Command to run Tesseract with custom whitelist
             String command = parms.pathToTesseract + " " + imageFile.getPath() + " " + 
-            				 outputBaseName + " -c tessedit_char_whitelist=" + whitelist;
+            				 outputBaseName + 
+            				 (whitelist != null ? " -c tessedit_char_whitelist=" + whitelist :
+            					 				  "");
 
             // Execute the command
             Process process = Runtime.getRuntime().exec(command);

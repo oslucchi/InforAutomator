@@ -1,6 +1,6 @@
 package main.java.it.l_soft.InforAutomator;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import javax.json.JsonObject;
 
@@ -8,6 +8,7 @@ import org.apache.log4j.Logger;
 import org.sikuli.basics.Settings;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Key;
+import org.sikuli.script.KeyModifier;
 import org.sikuli.script.Location;
 import org.sikuli.script.Match;
 import org.sikuli.script.Mouse;
@@ -89,6 +90,47 @@ public class MoveStockFormFiller extends InforFunctions {
 		textOpt = OCR.globalOptions().fontSize(9);
 	}
 	
+	private void closeAndResetMenu()
+	{
+		if (!parms.closeFunctionAtEnd)
+		{
+			log.debug("NOT CLOSING THE WINDOW because closeFunctionAtEnd is false!!!");
+			return;
+		}
+		
+		Match m;
+		try
+		{
+			formHeader.click("img/Main_Window_Close.png");
+			Utils.pauseExecution(2000);
+			log.debug("Post changes ? " + parms.postChanges);
+			if (!parms.postChanges)
+			{
+				log.debug("NOT POSTING CHANGES since postChanges var is false!!!");
+				m = screen.exists("img/NOButton.png");
+				log.debug("No button on screen ? " + (m == null ? "no" : "yes"));
+				if (m != null) m.click();
+			}
+			else
+			{
+				screen.type(Key.ENTER);
+				Utils.pauseExecution(250);
+				screen.type(Key.ENTER);
+				Utils.pauseExecution(3000);
+				screen.type(Key.ENTER);
+			}
+			Utils.pauseExecution(1000);
+
+			menu.click("img/Inventory_Movements.png");
+			Utils.pauseExecution(500);
+			menu.click("img/Sales_Button.png");
+		}
+		catch(Exception e)
+		{
+			;
+		}
+	}
+		
 	private boolean getInventoryMovementsFeatureOn()
 	{
 		Match m;
@@ -118,8 +160,8 @@ public class MoveStockFormFiller extends InforFunctions {
 		{
 			log.debug("Transfer option is not exposed, expand the Inventory Movements option");
 			try {
-				Utils.pauseExecution(1000);
 				menu.click("img/Inventory_Movements.png");
+				Utils.pauseExecution(500);
 			}
 			catch(Exception e)
 			{
@@ -128,8 +170,7 @@ public class MoveStockFormFiller extends InforFunctions {
 			}
 		}
 		log.trace("The Inventory Movements option is exposed");
-		Mouse.move(20, 20);
-		Utils.pauseExecution(1000);
+		Mouse.move(50, 0);
 
 		if ((m = Utils.findTextInRegion("Transfer", menu, textOpt)) == null)
 		{
@@ -137,44 +178,11 @@ public class MoveStockFormFiller extends InforFunctions {
 			return false;
 		}
 		
-		log.debug("Click on Inventory Movements Trasfer button");
-		Mouse.move(new Location(m.getX() + 10, m.getY() + 5));
-		m.click();
+		Location l = new Location(xOffset+m.getX() + 10, yOffset+m.getY()+5); 
+		Mouse.move(l);
+		log.debug("Click on Inventory Movements Trasfer button at " + Mouse.at().toString());
+		Mouse.click(l, "L", 1);
 		return true;
-	}
-	
-	private void closeAndResetMenu()
-	{
-		Match m;
-		try
-		{
-			formHeader.click("img/Main_Window_Close.png");
-			Utils.pauseExecution(2000);
-			log.debug("Post changes ? " + parms.postChanges);
-			if (!parms.postChanges)
-			{
-				m = screen.exists("img/NOButton.png");
-				log.debug("No button on screen ? " + (m == null ? "no" : "yes"));
-				if (m != null) m.click();
-			}
-			else
-			{
-				screen.type(Key.ENTER);
-				Utils.pauseExecution(250);
-				screen.type(Key.ENTER);
-				Utils.pauseExecution(3000);
-				screen.type(Key.ENTER);
-			}
-			Utils.pauseExecution(1000);
-
-			menu.click("img/Inventory_Movements.png");
-			Utils.pauseExecution(500);
-			menu.click("img/Sales_Button.png");
-		}
-		catch(Exception e)
-		{
-			;
-		}
 	}
 	
 	private boolean getLocationContent()
@@ -183,34 +191,28 @@ public class MoveStockFormFiller extends InforFunctions {
 			log.debug("Wait for the form to appear");
 
 			mItem = formHeader.exists("img/Inventory_Information_InventoryInformation_Form.png", 10);
-			
-			log.debug("Entering data");
-			
-			mItem = formHeader.find("img/Inventory_Movements_ItemID.png");
-			log.debug("ItemID found at " + mItem.getX() + "-" + mItem.getY());
-			rItem = new Region(mItem.getX() + 300, mItem.getY()-3, 200, 23);
+
 			log.debug("Entering article '" + sm.getString("article"));
-			rItem.type(sm.getString("article"));
-			
-			log.debug("search for area to input location");
-			mItem = formHeader.find("img/Inventory_Information_InventoryInformation_Form.png");
+			formHeader.type(sm.getString("article"));
+			for(int i = 0; i < 6; i++)
+			{
+				formHeader.type(Key.TAB);
+				Utils.pauseExecution(100);
+			}
+
+			log.debug("Entering location to filter");
 			String locationFrom[] = sm.getString("locationFrom").split("-");
 			for(int i = 0; i < 4; i++)
 			{
-				log.debug("entering data in location at " + 
-						  (mItem.getX() + 251) + "," + mItem.getY());
-				rItem = new Region(mItem.getX() + 251, mItem.getY() + 23 * i, 200, 23);
-				rItem.click();
-				Utils.pauseExecution(200);
-				rItem.type(locationFrom[i]);
-				Utils.pauseExecution(300);
-				rItem = new Region(mItem.getX() + 545, mItem.getY() + 23 * i, 200, 23);
-				rItem.click();
-				Utils.pauseExecution(200);
-				rItem.type(locationFrom[i]);
-				Utils.pauseExecution(300);
+				formHeader.type(locationFrom[i]);
+				formHeader.type(Key.TAB);
+				Utils.pauseExecution(100);					
+				formHeader.type(locationFrom[i]);
+				formHeader.type(Key.TAB);
+				Utils.pauseExecution(100);					
 			}
-			formHeader.click("img/Inventory_Information_InventoryInformation_Load.png");
+			formHeader.type(Key.ENTER);
+
 			
 			rItem = appBody.exists("img/No_Data_Record_Found.png", 2);
 			if (rItem != null)
@@ -220,8 +222,7 @@ public class MoveStockFormFiller extends InforFunctions {
 				closeAndResetMenu();
 				return false;
 			}
-			appBody.wait("img/Inventory_Movements_BacTracked_Inventory.png");
-			rItem = appBody.find("img/Inventory_Movements_Movable_Quantity.png");
+			mItem = appBody.exists("img/Inventory_Movements_Movable_Quantity.png", 10);
 		}
 		catch(Exception e)
 		{
@@ -275,16 +276,6 @@ public class MoveStockFormFiller extends InforFunctions {
 			rDest.type(qtyToEnter);
 			rDest.type(Key.ENTER);
 			Utils.pauseExecution(300);
-
-			if (parms.postChanges)
-			{
-				postData();
-			}
-			else
-			{
-				log.debug("NOT POSTING CHANGES since postChanges var is false!!!");
-				Utils.pauseExecution(2000);
-			}
 		}
 		catch(Exception e)
 		{
@@ -294,42 +285,34 @@ public class MoveStockFormFiller extends InforFunctions {
 		return true;
 	}
 	
-	private double moveQuantityAcrossLocations(Region movQty, double requiredQuantity, boolean wholeQuantity) 
-			throws Exception
+	private double moveQuantityAcrossLocations(double requiredQuantity, boolean wholeQuantity) 
+			throws Exception 
 	{
-		if (requiredQuantity == 0)
-			return 0;
+//		parms.highlight = true;
+		Region movQty = new Region(mItem.getX() + 50, mItem.getY() + 15, 78, 200);
+		Utils.highlightSelection(parms, movQty, Parameters.HIGHLIGHT_DURATION);
 		
-		log.debug("Willing to move " + requiredQuantity);
-
 		// get The available quantities to find the best suiting row
-		List<Match> matches = OCR.readLines(movQty, textOpt);
-		log.debug("Found " + matches.size() + " quantities in region");
-		int row = 0;
+		ArrayList<String> lines = Utils.runTesseractOnRegion(movQty, ".,0123456789", true);
+		log.debug("There are " + lines.size() + " lines for location containing items (" + lines.toString());
+		
+		Location l = new Location(movQty.getX(), movQty.getY() + 5);
 		double quantityInLocation;
-		for(Match m: matches)
+		int run = 0;
+		while(true)
 		{
-			log.debug("match text is '" + m.getText() + "'");
-			if (!m.getText().contains(","))
+			if (run >= lines.size())
 			{
-				log.debug("it is not a quantity");
-				continue;
+				break;
 			}
-			String quantity = m.getText().substring(0, m.getText().indexOf(','));
+			Mouse.click(l, "L", 1);
+			screen.type("a", KeyModifier.CTRL);
+			screen.type("c", KeyModifier.CTRL);
+			screen.type(Key.TAB);
+			log.debug("Trying to convert '" + Utils.getClipboardContents() + "' in number");
 			try {
-				quantityInLocation = Double.parseDouble(quantity);
-			}
-			catch(NumberFormatException e)
-			{
-				log.debug("The quantity field content is malformed");
-				continue;
-			}
-			
-			log.debug("Found quantity '" + quantity + "' on row " + row + 
-					  " at " + (appBody.getX()+20) + " " + m.getY());
-			try {
-				
-	
+				quantityInLocation = Utils.parseNumberInLocale(Utils.getClipboardContents()).doubleValue();
+
 				if (wholeQuantity)
 				{
 					if (quantityInLocation >= requiredQuantity)
@@ -338,7 +321,7 @@ public class MoveStockFormFiller extends InforFunctions {
 						
 						// the inspected row has quantity enough for use to move, use it
 						// Get the region where the row number is and click on it
-						rItem = new Region(appBody.getX()+20, movQty.getY() + m.getY(), 50, 23);
+						rItem = new Region(appBody.getX()+20, movQty.getY() + Mouse.at().getY(), 50, 23);
 						Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
 						rItem.click();
 						if (doTheTrasfer(requiredQuantity, quantityInLocation))
@@ -358,11 +341,11 @@ public class MoveStockFormFiller extends InforFunctions {
 				}
 				else
 				{
-					rItem = new Region(appBody.getX()+ 20, m.getY()-5, 50, 23);
+					rItem = new Region(appBody.getX()+ 20, Mouse.at().getY()-5, 50, 23);
 					rItem.click();
 					log.trace("whole quantity not required transfer what is here " + 
 							  quantityInLocation);
-
+	
 					if (doTheTrasfer(requiredQuantity, quantityInLocation))
 					{
 						requiredQuantity -= (quantityInLocation < requiredQuantity ? 
@@ -377,6 +360,8 @@ public class MoveStockFormFiller extends InforFunctions {
 				{
 					break;
 				}
+				l = new Location(l.getX(), l.getY() + 20);
+				run++;
 			}
 			catch(NumberFormatException e)
 			{
@@ -384,30 +369,25 @@ public class MoveStockFormFiller extends InforFunctions {
 				throw new Exception(e.getMessage());
 			}
 		}
-		log.debug("Duties performed, returning with quantity " + requiredQuantity);
+//		parms.highlight = true;
 		return requiredQuantity;
 	}
 	
 	private void moveQuantityToDestination() throws Exception
 	{
-		Match m = appBody.exists("img/Inventory_Movements_Movable_Quantity.png", 1);
-		if (m == null)
-		{
-			throw new Exception("Colonna quantita' movibile non trovata");
-		}
-		Region movQty = new Region(m.getX(), m.getY() + 15, 140, 200);
-		Utils.highlightSelection(parms, movQty, Parameters.HIGHLIGHT_DURATION);
-		
+	
 		double requiredQuantity = (double) sm.getInt("quantity");
 		try
 		{
-			requiredQuantity = moveQuantityAcrossLocations(movQty, requiredQuantity, true);
-			moveQuantityAcrossLocations(movQty, requiredQuantity, false);
+			requiredQuantity = moveQuantityAcrossLocations(requiredQuantity, true);
+			if (requiredQuantity > 0)
+				moveQuantityAcrossLocations(requiredQuantity, false);
 		}
 		catch(Exception e)
 		{
 			throw e;
 		}
+
 		log.trace("Required quantity fullfilled");
 	}
 	
@@ -426,7 +406,7 @@ public class MoveStockFormFiller extends InforFunctions {
 
 				if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
 				{
-					log.debug("Icona INFOR non trovat, non è in esecuzione. Esco");
+					log.debug("Icona INFOR non trovata, non è in esecuzione. Esco");
 					System.exit(-1);
 				}
 				mItem.click();
@@ -435,7 +415,7 @@ public class MoveStockFormFiller extends InforFunctions {
 			if (!getInventoryMovementsFeatureOn()) return "KO";
 			if (!getLocationContent()) return "KO";
 
-			if (rItem == null)
+			if (mItem == null)
 			{
 				Sikulix.popup("Non ho trovato l'articolo '" +
 							  sm.getString("article") + 
@@ -443,6 +423,7 @@ public class MoveStockFormFiller extends InforFunctions {
 							  sm.getString("locationFrom") + "'");
 				return "KO";
 			}
+
 			moveQuantityToDestination();
 			if (parms.postChanges)
 			{

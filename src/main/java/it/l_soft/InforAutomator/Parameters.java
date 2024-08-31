@@ -1,5 +1,6 @@
 package main.java.it.l_soft.InforAutomator;
 
+import java.util.Locale;
 
 public class Parameters {
 	static final int FORM_HEADER_OFFSET_X = 220;
@@ -21,6 +22,8 @@ public class Parameters {
 	public int useScreen = 0;
 	public int pauseAtStart = 0;
 	public boolean highlightMainRegions = false;
+	public String pathToTesseract = "/usr/bin/tesseract";
+	public Locale appLocale = Locale.ITALIAN;
 	
 	private static Parameters instance = null;
 	public static Parameters getInstance()

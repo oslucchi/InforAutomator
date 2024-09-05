@@ -138,11 +138,6 @@ public class MoveStockFormFiller extends InforFunctions {
 				parms.formHeader.type(Key.TAB);
 				Utils.pauseExecution(100);
 			}
-			Region test = new Region(Mouse.at().getX(), Mouse.at().getY(), 100, 20);
-			test.highlight(parms.HIGHLIGHT_DURATION);
-			
-			Utils.pauseExecution(2000);
-
 			log.debug("Entering location to filter");
 			String locationFrom[] = sm.getString("locationFrom").split("-");
 			log.debug("Locations array is [" + locationFrom + "]");

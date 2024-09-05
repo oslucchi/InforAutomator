@@ -3,7 +3,7 @@
   <groupId>InforAutomator</groupId>
   <artifactId>InforAutomator</artifactId>
   <packaging>jar</packaging>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <name>>InforAutomator</name>
   <url>http://maven.apache.org</url>
 
@@ -49,12 +49,15 @@
 				<manifest>
 					<addClasspath>true</addClasspath>
 					<mainClass>main.java.it.l_soft.InforAutomator.InforAutomator</mainClass>
-					<classpathPrefix>dependency-jars/</classpathPrefix>
+					<classpathPrefix>lib/</classpathPrefix>
+	                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+	                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 				</manifest>
 			  </archive>
 			</configuration>
 		</plugin>
-
+		
+		
 		<!-- Copy project dependency -->
 		<plugin>
 			<groupId>org.apache.maven.plugins</groupId>

@@ -4,7 +4,6 @@ package main.java.it.l_soft.InforAutomator;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import org.apache.log4j.Logger;
 import org.sikuli.basics.Debug;
 import org.sikuli.script.Screen;
@@ -14,7 +13,6 @@ public class InforAutomator {
 	
     public static void main(String[] args) 
     		throws NumberFormatException, InterruptedException {
-
     	if (args.length == 0)
     	{
             System.out.println("usage: java -jar InforAutomator [OPT]");
@@ -94,10 +92,18 @@ public class InforAutomator {
         		i = i+1;
         		break;
         		
+        	case "--version":
+        	case "-v":
+        		System.out.println("InforAutomator version: " + 
+        						   InforAutomator.class.getPackage().getImplementationVersion());
+        		System.exit(0);
+        		break;
+        		
         	case "--highlightMain":
         		parms.highlightMainRegions = true;
         	}
         }
+        
         System.out.println("Parms configuration:");
         System.out.println("\thighlight: " + parms.highlight);
         System.out.println("\tsimulator: " + parms.simulator);
@@ -109,6 +115,9 @@ public class InforAutomator {
         System.out.println("\tpauseAtStart: " + parms.pauseAtStart);
         System.out.println("\thighlightMain: " + parms.highlightMainRegions);
 
+        Utils.pauseExecution(parms.pauseAtStart);
+        parms.setScreenRegions(parms.highlightMainRegions);
+       
         Logger log = Logger.getLogger(InforAutomator.class);
         log.debug("Parms configuration:");
         log.debug("\thighlight: " + parms.highlight);
@@ -129,8 +138,8 @@ public class InforAutomator {
         
         try {
             @SuppressWarnings("resource")
-			ServerSocket serverSocket = new ServerSocket(9000);
-            System.out.println("Server started. Listening on port 9000...");
+			ServerSocket serverSocket = new ServerSocket(parms.getInforAutomatorPort());
+            System.out.println("Server started. Listening on port " + parms.getInforAutomatorPort() + "...");
              
 
             while (true) {

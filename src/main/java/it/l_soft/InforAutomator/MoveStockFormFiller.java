@@ -5,89 +5,27 @@ import java.util.ArrayList;
 import javax.json.JsonObject;
 
 import org.apache.log4j.Logger;
-import org.sikuli.basics.Settings;
 import org.sikuli.script.ImagePath;
 import org.sikuli.script.Key;
 import org.sikuli.script.KeyModifier;
 import org.sikuli.script.Location;
 import org.sikuli.script.Match;
 import org.sikuli.script.Mouse;
-import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
-import org.sikuli.script.Screen;
 import org.sikuli.script.Sikulix;
 
 public class MoveStockFormFiller extends InforFunctions {
 	private final Logger log = Logger.getLogger(this.getClass());
 	
-	OCR.Options textOpt;
 	Parameters parms;
 	Match mItem = null;
-	Region screen, menu, formHeader, appBody, rItem, toolBar, r;
 	double movedQUantity = 0;
-	int xOffset, yOffset, screenH, screenW;
-
+	Region rItem, r;
+	
 	public MoveStockFormFiller(JsonObject sm, Parameters parms)
 	{
 		this.sm = sm;
 		this.parms = parms;
-
-		xOffset = (int) Screen.getBounds(parms.useScreen).getX();
-		yOffset = (int) Screen.getBounds(parms.useScreen).getY();
-		screenH  = (int) Screen.getBounds(parms.useScreen).getHeight();
-		screenW = (int) Screen.getBounds(parms.useScreen).getWidth();
-		log.debug(String.format("Screen details: # %d, X %d, Y %d, W %d, H%d",
-								parms.useScreen, xOffset, yOffset, screenW, screenH));
-
-		screen = new Region(xOffset, yOffset, screenW, screenH);
-		if (parms.highlightMainRegions)
-		{
-			Utils.highlightSelection(parms, screen, Parameters.HIGHLIGHT_DURATION);
-		}
-		
-		Settings.ActionLogs = false; // messages from click, ...
-		Settings.InfoLogs = false; //other information messages
-		menu = new Region(xOffset, yOffset, 240, screenH);
-		log.debug(String.format("Region menu at: X %d, Y %d, W %d, H%d",
-				menu.getX(), menu.getY(), menu.getW() ,menu.getH()));
-		if (parms.highlightMainRegions)
-		{
-			Utils.highlightSelection(parms, menu, Parameters.HIGHLIGHT_DURATION);
-		}
-
-		toolBar = new Region(xOffset + Parameters.TOOLBAR_OFFSET_X,
-							 yOffset + Parameters.TOOLBAR_OFFSET_Y, 
-							 screenW - Parameters.TOOLBAR_OFFSET_X,
-							 screenH - Parameters.TOOLBAR_OFFSET_Y);
-		log.debug(String.format("Region toolBar at: X %d, Y %d, W %d, H%d",
-				toolBar.getX(), toolBar.getY(), toolBar.getW() ,toolBar.getH()));	
-		if (parms.highlightMainRegions)
-		{
-			Utils.highlightSelection(parms, toolBar, Parameters.HIGHLIGHT_DURATION);
-		}
-		
-		formHeader = new Region(xOffset + Parameters.FORM_HEADER_OFFSET_X,
-								 yOffset + Parameters.FORM_HEADER_OFFSET_Y, 
-								 screenW - Parameters.FORM_HEADER_OFFSET_X,
-								 250);
-		log.debug(String.format("Region formHeader at: X %d, Y %d, W %d, H%d",
-				formHeader.getX(), formHeader.getY(), formHeader.getW() ,formHeader.getH()));		
-		if (parms.highlightMainRegions)
-		{
-			Utils.highlightSelection(parms, formHeader, Parameters.HIGHLIGHT_DURATION);
-		}
-		
-		appBody = new Region(xOffset + Parameters.APPBODY_OFFSET_X,
-								 yOffset + Parameters.APPBODY_OFFSET_Y, 
-								 screenW - Parameters.APPBODY_OFFSET_X,
-								 screenH - Parameters.APPBODY_OFFSET_Y);
-		log.debug(String.format("Region appBody at: X %d, Y %d, W %d, H%d",
-				appBody.getX(), appBody.getY(), appBody.getW() ,appBody.getH()));		
-		if (parms.highlightMainRegions)
-		{
-			Utils.highlightSelection(parms, appBody, Parameters.HIGHLIGHT_DURATION);
-		}
-		textOpt = OCR.globalOptions().fontSize(9);
 	}
 	
 	private void closeAndResetMenu()
@@ -101,29 +39,29 @@ public class MoveStockFormFiller extends InforFunctions {
 		Match m;
 		try
 		{
-			formHeader.click("img/Main_Window_Close.png");
+			parms.formHeader.click("img/Main_Window_Close.png");
 			Utils.pauseExecution(2000);
 			log.debug("Post changes ? " + parms.postChanges);
 			if (!parms.postChanges)
 			{
 				log.debug("NOT POSTING CHANGES since postChanges var is false!!!");
-				m = screen.exists("img/NOButton.png");
-				log.debug("No button on screen ? " + (m == null ? "no" : "yes"));
+				m = parms.screen.exists("img/NOButton.png");
+				log.debug("No button on parms.screen ? " + (m == null ? "no" : "yes"));
 				if (m != null) m.click();
 			}
 			else
 			{
-				screen.type(Key.ENTER);
+				parms.screen.type(Key.ENTER);
 				Utils.pauseExecution(250);
-				screen.type(Key.ENTER);
+				parms.screen.type(Key.ENTER);
 				Utils.pauseExecution(3000);
-				screen.type(Key.ENTER);
+				parms.screen.type(Key.ENTER);
 			}
 			Utils.pauseExecution(1000);
 
-			menu.click("img/Inventory_Movements.png");
+			parms.menu.click("img/Inventory_Movements.png");
 			Utils.pauseExecution(500);
-			menu.click("img/Sales_Button.png");
+			parms.menu.click("img/Sales_Button.png");
 		}
 		catch(Exception e)
 		{
@@ -134,33 +72,33 @@ public class MoveStockFormFiller extends InforFunctions {
 	private boolean getInventoryMovementsFeatureOn()
 	{
 		Match m;
-		log.debug("Check if the Inventory menu is exposed already");
+		log.debug("Check if the Inventory parms.menu is exposed already");
 		try{
-			menu.find("img/Inventory_Menu_Exposed.png");
+			parms.menu.find("img/Inventory_Menu_Exposed.png");
 		}
 		catch(Exception e)
 		{
 			Utils.pauseExecution(1000);
 			log.debug("It seems it is not opened, click on Inventory button");
 			try {
-				menu.click("img/InventoryButton.png");
+				parms.menu.click("img/InventoryButton.png");
 			}
 			catch(Exception e1)
 			{
 				Utils.pauseExecution(1000);
-				log.error("Can't get Inventory menu opened. Aborting function", e1);
+				log.error("Can't get Inventory parms.menu opened. Aborting function", e1);
 				return false;
 			}
 		}
 		log.trace("The Inventory Menu should now is exposed");
 
-		log.debug("Check if 'Transfer' is already exposed on menu");
+		log.debug("Check if 'Transfer' is already exposed on parms.menu");
 		
-		if ((m = Utils.findTextInRegion("Transfer", menu, textOpt)) == null)
+		if ((m = Utils.findTextInRegion("Transfer", parms.menu, parms.textOpt)) == null)
 		{
 			log.debug("Transfer option is not exposed, expand the Inventory Movements option");
 			try {
-				menu.click("img/Inventory_Movements.png");
+				parms.menu.click("img/Inventory_Movements.png");
 				Utils.pauseExecution(500);
 			}
 			catch(Exception e)
@@ -172,16 +110,17 @@ public class MoveStockFormFiller extends InforFunctions {
 		log.trace("The Inventory Movements option is exposed");
 		Mouse.move(50, 0);
 
-		if ((m = Utils.findTextInRegion("Transfer", menu, textOpt)) == null)
+		if ((m = Utils.findTextInRegion("Transfer", parms.menu, parms.textOpt)) == null)
 		{
 			log.error("Can't see the Transfer option. Aborting function");
 			return false;
 		}
 		
-		Location l = new Location(xOffset+m.getX() + 10, yOffset+m.getY()+5); 
+		Location l = new Location(parms.xOffset+m.getX() + 10, parms.yOffset+m.getY()+5); 
 		Mouse.move(l);
 		log.debug("Click on Inventory Movements Trasfer button at " + Mouse.at().toString());
 		Mouse.click(l, "L", 1);
+		Utils.pauseExecution(500);
 		return true;
 	}
 	
@@ -190,43 +129,49 @@ public class MoveStockFormFiller extends InforFunctions {
 		try {
 			log.debug("Wait for the form to appear");
 
-			mItem = formHeader.exists("img/Inventory_Information_InventoryInformation_Form.png", 10);
+			mItem = parms.formHeader.exists("img/Inventory_Information_InventoryInformation_Form.png", 10);
 
 			log.debug("Entering article '" + sm.getString("article"));
-			formHeader.type(sm.getString("article"));
+			parms.formHeader.type(sm.getString("article"));
 			for(int i = 0; i < 6; i++)
 			{
-				formHeader.type(Key.TAB);
+				parms.formHeader.type(Key.TAB);
 				Utils.pauseExecution(100);
 			}
+			Region test = new Region(Mouse.at().getX(), Mouse.at().getY(), 100, 20);
+			test.highlight(parms.HIGHLIGHT_DURATION);
+			
+			Utils.pauseExecution(2000);
 
 			log.debug("Entering location to filter");
 			String locationFrom[] = sm.getString("locationFrom").split("-");
+			log.debug("Locations array is [" + locationFrom + "]");
+			
 			for(int i = 0; i < 4; i++)
 			{
-				formHeader.type(locationFrom[i]);
-				formHeader.type(Key.TAB);
+				parms.formHeader.type(locationFrom[i]);
+				parms.formHeader.type(Key.TAB);
 				Utils.pauseExecution(100);					
-				formHeader.type(locationFrom[i]);
-				formHeader.type(Key.TAB);
+				parms.formHeader.type(locationFrom[i]);
+				parms.formHeader.type(Key.TAB);
 				Utils.pauseExecution(100);					
 			}
-			formHeader.type(Key.ENTER);
+			parms.formHeader.type(Key.ENTER);
 
 			
-			rItem = appBody.exists("img/No_Data_Record_Found.png", 2);
+			rItem = parms.appBody.exists("img/No_Data_Record_Found.png", 2);
 			if (rItem != null)
 			{
-				appBody.type(Key.ENTER);
+				parms.appBody.type(Key.ENTER);
 				Utils.pauseExecution(500);
 				closeAndResetMenu();
 				return false;
 			}
-			mItem = appBody.exists("img/Inventory_Movements_Movable_Quantity.png", 10);
+			mItem = parms.appBody.exists("img/Inventory_Movements_Movable_Quantity.png", 10);
 		}
 		catch(Exception e)
 		{
-			log.error("Exception while getting location content");
+			log.error("Exception while getting location content", e);
 			return false;
 		}
 		return true;
@@ -243,7 +188,7 @@ public class MoveStockFormFiller extends InforFunctions {
 		try {
 			String locationTo[] = sm.getString("locationTo").split("-");
 
-			Region rDest = appBody.find("img/Inventory_Movements_Destination_Area.png");
+			Region rDest = parms.appBody.find("img/Inventory_Movements_Destination_Area.png");
 			rDest = rDest.below(50);
 			rDest.click();
 			Utils.pauseExecution(200);
@@ -306,9 +251,9 @@ public class MoveStockFormFiller extends InforFunctions {
 				break;
 			}
 			Mouse.click(l, "L", 1);
-			screen.type("a", KeyModifier.CTRL);
-			screen.type("c", KeyModifier.CTRL);
-			screen.type(Key.TAB);
+			parms.screen.type("a", KeyModifier.CTRL);
+			parms.screen.type("c", KeyModifier.CTRL);
+			parms.screen.type(Key.TAB);
 			log.debug("Trying to convert '" + Utils.getClipboardContents() + "' in number");
 			try {
 				quantityInLocation = Utils.parseNumberInLocale(Utils.getClipboardContents()).doubleValue();
@@ -321,7 +266,7 @@ public class MoveStockFormFiller extends InforFunctions {
 						
 						// the inspected row has quantity enough for use to move, use it
 						// Get the region where the row number is and click on it
-						rItem = new Region(appBody.getX()+20, movQty.getY() + Mouse.at().getY(), 50, 23);
+						rItem = new Region(parms.appBody.getX()+20, movQty.getY() + Mouse.at().getY(), 50, 23);
 						Utils.highlightSelection(parms, rItem, Parameters.HIGHLIGHT_DURATION);
 						rItem.click();
 						if (doTheTrasfer(requiredQuantity, quantityInLocation))
@@ -341,7 +286,7 @@ public class MoveStockFormFiller extends InforFunctions {
 				}
 				else
 				{
-					rItem = new Region(appBody.getX()+ 20, Mouse.at().getY()-5, 50, 23);
+					rItem = new Region(parms.appBody.getX()+ 20, Mouse.at().getY()-5, 50, 23);
 					rItem.click();
 					log.trace("whole quantity not required transfer what is here " + 
 							  quantityInLocation);
@@ -400,17 +345,17 @@ public class MoveStockFormFiller extends InforFunctions {
 		ImagePath.add(imgPath);
 		
 		try{
-			if ((mItem = screen.exists("img/InforLogo.png")) == null)
+			if ((mItem = parms.screen.exists("img/InforLogo.png")) == null)
 			{
 				log.debug("La finestra di INFOR non e' aperta, cerco l'icona");
 
-				if ((mItem = toolBar.exists("img/InforIcon.png")) == null)
+				if ((mItem = parms.toolBar.exists("img/InforIcon.png")) == null)
 				{
 					log.debug("Icona INFOR non trovata, non è in esecuzione. Esco");
 					System.exit(-1);
 				}
 				mItem.click();
-				menu.wait("img/InforLogo.png");
+				parms.menu.wait("img/InforLogo.png");
 			}
 
 			if (!getInventoryMovementsFeatureOn()) return "KO";
@@ -426,17 +371,11 @@ public class MoveStockFormFiller extends InforFunctions {
 			}
 
 			moveQuantityToDestination();
-			if (parms.postChanges)
-			{
-				
-			}
+			closeAndResetMenu();
 		}
 		catch(Exception e){
 			e.printStackTrace();
 			return "KO";
-		}
-		finally {
-			closeAndResetMenu();
 		}
 		
 		return "OK";

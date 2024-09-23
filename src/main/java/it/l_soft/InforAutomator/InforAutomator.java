@@ -116,6 +116,7 @@ public class InforAutomator {
         System.out.println("\thighlightMain: " + parms.highlightMainRegions);
 
         Utils.pauseExecution(parms.pauseAtStart);
+        
         parms.setScreenRegions(parms.highlightMainRegions);
        
         Logger log = Logger.getLogger(InforAutomator.class);

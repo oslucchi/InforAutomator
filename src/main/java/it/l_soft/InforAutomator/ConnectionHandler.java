@@ -78,13 +78,17 @@ public class ConnectionHandler extends Thread
 	    // Invoke the doSomething function and get the return value
     	if (parms.simulator)
 		{
+        	log.trace("running on simulator");
     		ff = new Simulator().new DTV(pickList, orderRef);
 		}
     	else
     	{
+        	log.trace("running real app");
     		ff = new DTVFormFiller(pickList, orderRef, parms);
     	}
 
+    	log.debug("pickList is '" + pickList.toString() + "'");
+    	log.trace("calling enterData");
 	    String DTVName = ff.enterData();
 
 	    // Convert the return code to bytes

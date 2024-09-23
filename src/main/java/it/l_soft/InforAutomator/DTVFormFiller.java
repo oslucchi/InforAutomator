@@ -13,7 +13,6 @@ import org.sikuli.script.Match;
 import org.sikuli.script.Mouse;
 import org.sikuli.script.OCR;
 import org.sikuli.script.Region;
-import org.sikuli.script.Screen;
 
 public class DTVFormFiller extends InforFunctions {	
 	private final Logger log = Logger.getLogger(this.getClass());
@@ -21,7 +20,6 @@ public class DTVFormFiller extends InforFunctions {
 	ArrayList<Picking> pickList = null;
 	String orderRef = null;
 	Parameters parms;
-	Screen s = new Screen(1);
 	Match mItem = null;
 	Region rItem, r;
 	String DTVName = null;
@@ -35,6 +33,7 @@ public class DTVFormFiller extends InforFunctions {
 		this.orderRef = orderRef;
 		Settings.ActionLogs = false; // messages from click, ...
 		Settings.InfoLogs = false; //other information messages
+		this.parms = parms;
 	}
 
 	private boolean getSalesIssueFeatureOn()
@@ -308,6 +307,7 @@ public class DTVFormFiller extends InforFunctions {
 	@Override
 	public String enterData()
 	{
+		log.debug("enterData has started");
 		String imgPath = System.getProperty("user.dir");
 		ImagePath.add(imgPath);
 		
@@ -324,6 +324,7 @@ public class DTVFormFiller extends InforFunctions {
 				mItem.click();
 				parms.menu.wait("img/InforLogo.png");
 			}
+			log.trace("La finestra di INFOR e' aperta, procediamo");
 
 			if (!getSalesIssueFeatureOn()) return "KO";
 			if (!getSalesIssueData()) return "KO";

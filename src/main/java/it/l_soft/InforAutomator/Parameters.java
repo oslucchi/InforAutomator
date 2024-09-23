@@ -113,6 +113,7 @@ public class Parameters {
 	
 	public void setScreenRegions(boolean highlight)
 	{
+		
 		xOffset = (int) Screen.getBounds(useScreen).getX();
 		yOffset = (int) Screen.getBounds(useScreen).getY();
 		screenH  = (int) Screen.getBounds(useScreen).getHeight();

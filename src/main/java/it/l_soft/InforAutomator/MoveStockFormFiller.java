@@ -140,7 +140,7 @@ public class MoveStockFormFiller extends InforFunctions {
 			}
 			log.debug("Entering location to filter");
 			String locationFrom[] = sm.getString("locationFrom").split("-");
-			log.debug("Locations array is [" + locationFrom + "]");
+			log.debug("Locations array is [" + sm.getString("locationFrom") + "]");
 			
 			for(int i = 0; i < 4; i++)
 			{
@@ -231,11 +231,35 @@ public class MoveStockFormFiller extends InforFunctions {
 //		parms.highlight = true;
 		Region movQty = new Region(mItem.getX() + 50, mItem.getY() + 15, 78, 200);
 		Utils.highlightSelection(parms, movQty, Parameters.HIGHLIGHT_DURATION);
-		
+
 		// get The available quantities to find the best suiting row
 		ArrayList<String> lines = Utils.runTesseractOnRegion(movQty, ".,0123456789", true);
 		log.debug("There are " + lines.size() + " lines for location containing items (" + lines.toString());
+
+		ArrayList<String> toRemove = new ArrayList<String>();
 		
+		for(int y = 0; y < lines.size(); y++)
+		{
+			log.debug("Check if current line '" + lines.get(y) + "' contains numbers only");
+			try {
+				Double.parseDouble(lines.get(y));
+				if (lines.get(y).trim().compareTo("") == 0)
+				{
+					log.debug("Empty line, ignoring it");
+					toRemove.add(lines.get(y));
+				}
+			}
+			catch(Exception e)
+			{
+				log.debug("Got " + e.getMessage() + " on line '" + lines.get(y) + "', ignoring it");
+				toRemove.add(lines.get(y));
+			}
+		}
+		lines.removeAll(toRemove);
+		if (lines.size() == 0)
+		{
+			lines.add("0");
+		}
 		Location l = new Location(movQty.getX(), movQty.getY() + 5);
 		double quantityInLocation;
 		int run = 0;

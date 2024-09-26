@@ -295,7 +295,8 @@ public class DTVFormFiller extends InforFunctions {
 			else
 			{
 				match.click();
-				parms.screen.exists("img/Inventory_GoodsIssue_SalesIssue_End.png", 30);
+				parms.screen.exists("img/Inventory_GoodsIssue_SalesIssue_End.png", 120);
+				
 			}
 		}
 		catch(Exception e)
@@ -344,8 +345,14 @@ public class DTVFormFiller extends InforFunctions {
 			
 			if (parms.closeFunctionAtEnd)
 			{
-				parms.formHeader.click("img/Main_Window_Close.png");
+				// Close the current window
+				log.trace("Closing windows, wait for 15 secs to proceed");
+				Utils.pauseExecution(15000);
+				Location l = new Location(parms.screen.getX() + parms.screen.getW() - 30, 20);
+				Mouse.click(l, "L", 1);
 				Utils.pauseExecution(2000);
+				
+				log.trace("resetting menu to the start status");
 				parms.menu.click("img/Inventory_GoodsIssueButton.png");	
 				Utils.pauseExecution(500);
 				parms.menu.click("img/Sales_Button.png");

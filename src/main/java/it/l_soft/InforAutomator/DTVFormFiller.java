@@ -347,7 +347,7 @@ public class DTVFormFiller extends InforFunctions {
 			{
 				// Close the current window
 				log.trace("Closing windows, wait for 15 secs to proceed");
-				Utils.pauseExecution(15000);
+				Utils.pauseExecution(parms.secondsToWaitBeforeClose * 1000);
 				Location l = new Location(parms.screen.getX() + parms.screen.getW() - 30, 20);
 				Mouse.click(l, "L", 1);
 				Utils.pauseExecution(2000);

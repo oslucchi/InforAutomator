@@ -31,6 +31,7 @@ public class Parameters {
 	public boolean testRun = false;
 	public String inforAutomatorHost = "192.168.60.110";
 	public int inforAutomatorPort = 9000;
+	public int secondsToWaitBeforeClose = 25;
 	public boolean debug = false;
 	public boolean postChanges = false;
 	public boolean closeFunctionAtEnd = false;
@@ -90,6 +91,8 @@ public class Parameters {
     	pathToTesseract = properties.getProperty("pathToTesseract");
     	inforAutomatorHost = properties.getProperty("inforAutomatorHost");
     	inforAutomatorPort = Integer.valueOf(properties.getProperty("inforAutomatorPort"));
+    	secondsToWaitBeforeClose = Integer.valueOf(properties.getProperty("secondsToWaitBeforeClose"));
+    	
     	switch(properties.getProperty("appLocale"))
     	{
     	case "ENGLISH":

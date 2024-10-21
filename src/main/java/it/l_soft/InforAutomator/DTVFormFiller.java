@@ -1,5 +1,7 @@
 package main.java.it.l_soft.InforAutomator;
 
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -198,7 +200,12 @@ public class DTVFormFiller extends InforFunctions {
 		}
 		return true;
 	}
-
+	public static boolean isNumeric(String str) {
+		  ParsePosition pos = new ParsePosition(0);
+		  NumberFormat.getInstance().parse(str, pos);
+		  return str.length() == pos.getIndex();
+	}
+	
 	private boolean enterSalesIssueInventory()
 	{
 		ArrayList<String> articles;
@@ -223,15 +230,21 @@ public class DTVFormFiller extends InforFunctions {
 			log.debug("Found " + articles.size() + " items in form (" + articles.toString());
 
 			Location l = new Location(resourcesRegion.aboveAt().getX(), resourcesRegion.getY() + 10);
-
-			for(int i = 0; i < articles.size(); i++)
+			articles = new ArrayList<String>();
+			while(true)
 			{
 				Mouse.click(l, "L", 1);
 				parms.screen.type("a", KeyModifier.CTRL);
 				parms.screen.type("c", KeyModifier.CTRL);
 				parms.screen.type(Key.TAB);
 				String article = Utils.getClipboardContents();
-				log.debug("Setting PID for arti	cle '" + article + "'");
+				if (!isNumeric(article.trim())) 
+				{
+					// TODO: hack, a non numeric row indicates no more articles in the list
+					break;
+				}
+				articles.add(article);
+				log.debug("Setting PID for article '" + article + "'");
 				boolean artFound = false;
 				for(Picking item : pickList)				
 				{

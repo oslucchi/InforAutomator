@@ -143,9 +143,10 @@ public class DTVFormFiller extends InforFunctions {
 	private boolean enterSalesIssueCoordinates(Region resourcesRegion, ArrayList<String> articles)
 	{
 		try{
+			log.debug("Entering coordinates");
 			mItem = parms.appBody.exists("img/Inventory_GoodsIssue_SalesIssue_InputForm_CoordinatesTab.png");
 			mItem.click();
-			Utils.pauseExecution(250);
+			Utils.pauseExecution(1000);
 			
 			Location l = new Location(resourcesRegion.aboveAt().getX(), resourcesRegion.getY() + 10);
 			Mouse.click(l, "L", 1);
@@ -200,6 +201,7 @@ public class DTVFormFiller extends InforFunctions {
 		}
 		return true;
 	}
+	
 	public static boolean isNumeric(String str) {
 		  ParsePosition pos = new ParsePosition(0);
 		  NumberFormat.getInstance().parse(str, pos);
@@ -226,25 +228,25 @@ public class DTVFormFiller extends InforFunctions {
 			resourcesRegion = new Region(m.getX() - 2, m.getY() + 18, 120, 500);
 			Utils.highlightSelection(parms, resourcesRegion, Parameters.HIGHLIGHT_DURATION);
 
-			articles = Utils.runTesseractOnRegion(resourcesRegion, null, true);
-			log.debug("Found " + articles.size() + " items in form (" + articles.toString());
-
 			Location l = new Location(resourcesRegion.aboveAt().getX(), resourcesRegion.getY() + 10);
 			articles = new ArrayList<String>();
 			while(true)
 			{
+				Utils.clearClipboardContents();
 				Mouse.click(l, "L", 1);
 				parms.screen.type("a", KeyModifier.CTRL);
 				parms.screen.type("c", KeyModifier.CTRL);
-				parms.screen.type(Key.TAB);
+				Utils.pauseExecution(300);
 				String article = Utils.getClipboardContents();
-				if (!isNumeric(article.trim())) 
+				log.debug("article read is '" + article + "'");
+				if ((article.length() == 0) || !isNumeric(article)) 
 				{
 					// TODO: hack, a non numeric row indicates no more articles in the list
+					log.debug("Empty or non numeric value found. No more articles to consider");
 					break;
 				}
 				articles.add(article);
-				log.debug("Setting PID for article '" + article + "'");
+				parms.screen.type(Key.TAB);
 				boolean artFound = false;
 				for(Picking item : pickList)				
 				{
@@ -262,6 +264,7 @@ public class DTVFormFiller extends InforFunctions {
 				}
 				l = new Location(l.getX(), l.getY() + 20);
 			}
+			log.trace("Inventory realease completed. artilelist is: " + articles.toString());
 		}
 		catch(Exception e)
 		{
@@ -272,6 +275,7 @@ public class DTVFormFiller extends InforFunctions {
 		{
 //			parms.highlight = false;
 		}
+		log.trace("Entering coordinates now");
 		return enterSalesIssueCoordinates(resourcesRegion, articles);
 	}
 

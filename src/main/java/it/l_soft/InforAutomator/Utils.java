@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -121,7 +122,17 @@ public class Utils {
 		}
         return null;
 	}
-	
+
+    public static void clearClipboardContents() {
+        try {
+        	Toolkit toolkit = Toolkit.getDefaultToolkit();
+        	Clipboard clipboard = toolkit.getSystemClipboard();
+        	clipboard.setContents(new StringSelection(""), null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     public static String getClipboardContents() {
         try {
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
